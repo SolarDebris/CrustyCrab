@@ -1,0 +1,29 @@
+[package]
+name = "CrustyCrab"
+version = "0.1.0"
+authors = "Alex Schmith, Robbie Heine, Chandler Hake"
+edition = "2021"
+#documentation =
+publish = false
+
+[lib]
+name = "crabbypattyformula"
+path = "src/lib.rs"
+create-type = ["lib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.release]
+overflow-checks = "true"
+opt-level = 3
+
+
+
+
+[profile.dev]
+opt-level = 1
+
+
+
+[dependencies]
+
