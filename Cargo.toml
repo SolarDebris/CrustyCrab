@@ -1,29 +1,44 @@
 [package]
-name = "CrustyCrab"
+name = "crusty_crab"
 version = "0.1.0"
-authors = "Alex Schmith, Robbie Heine, Chandler Hake"
 edition = "2021"
 #documentation =
 publish = false
 
 [lib]
-name = "crabbypattyformula"
+name = "crabby_patty_formula"
 path = "src/lib.rs"
 create-type = ["lib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [profile.release]
-overflow-checks = "true"
-opt-level = 3
-
-
+overflow-checks = true
+opt-level = "z"
+lto = true
+panic = "abort"
 
 
 [profile.dev]
-opt-level = 1
+opt-level = "z"
+panic = "unwind"
 
-
+[profile.windows]
+inherits = "dev"
 
 [dependencies]
+run_script = "^0.10.0" 
+log = "0.4"
+socket2 = "0.4.7"
+gethostname = "0.2.3"
+bytes = "1.2.1"
+reqwest = "0.11"
+tokio = "1"
+
+
+
+
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winuser"] }
 

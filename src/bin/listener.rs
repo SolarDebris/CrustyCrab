@@ -8,4 +8,9 @@
 //  - DNS
 //
 //  - SSH (sftp)
-//
+
+
+fn main(){
+    println!("hello");
+
+}
