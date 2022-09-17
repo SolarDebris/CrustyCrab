@@ -2,6 +2,7 @@
 name = "crusty_crab"
 version = "0.1.0"
 edition = "2021"
+authors = ["Alex Schmith", "Chandler Hake", "Robbie Heine"]
 #documentation =
 publish = false
 
@@ -34,7 +35,6 @@ gethostname = "0.2.3"
 bytes = "1.2.1"
 reqwest = "0.11"
 tokio = "1"
-
 
 
 
