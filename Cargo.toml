@@ -24,8 +24,27 @@ panic = "abort"
 opt-level = "z"
 panic = "unwind"
 
+[profile.basic]
+inherits = "dev"
+
+[profile.level1]
+inherits = "dev"
+
+[profile.level2]
+inherits = "dev"
+
+[profile.level3]
+inherits = "dev"
+
+
+
 [profile.windows]
 inherits = "dev"
+
+
+
+
+
 
 [dependencies]
 run_script = "^0.10.0" 
