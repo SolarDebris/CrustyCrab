@@ -1,14 +1,18 @@
 use std::{process, fs};
 use std::io::{self, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::process::{Command};
 
 fn main() {
+    // clear console first
+    Command::new("clear"). status(). unwrap();
     // print the super cool banner
     banner();
 
     // main program loop
     loop {
         // print the prompt and read in a command
+
         print!("CrustyCrab $ ");
         io::stdout().flush().unwrap();
         let mut usr_cmd = String::new();
