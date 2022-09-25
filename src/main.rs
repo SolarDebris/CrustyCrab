@@ -45,31 +45,10 @@ fn banner(){
 }
 
 // prints help optional second argument for more specific details
-//
-//
+
 fn help(){
-    println!("Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagagagagag\n");
-    println!("Core Commands");
-    println!("-------------\n");
-    
-    println!("\texit");
-
-    println!("Listener Commands");
-    println!("-----------------\n");
-    
-    println!("Module Commands");
-    println!("---------------\n");
-
-    println!("Anchovy Commands");
-    println!("----------------\n");
-
-    println!("\tinfo");
-    println!("\texec");
-    println!("\tshell");
-    println!("\trun");
-    println!("\tkill");
-
-
+    let contents = fs::read_to_string("misc/help.txt");
+    println!("{c}\n", c=contents.unwrap());
 }
 
 // creates implant for server ip

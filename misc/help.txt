@@ -1,0 +1,21 @@
+Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagagagagag!
+
+Core Commands
+-------------
+help -> prints the help menu
+banner -> prints the ascii banner
+exit -> exits the Crusty Crab
+
+Listener Commands
+-----------------
+    
+Module Commands
+---------------
+
+Anchovy Commands
+----------------
+info -> 
+exec -> 
+shell -> 
+run -> 
+kill -> 
