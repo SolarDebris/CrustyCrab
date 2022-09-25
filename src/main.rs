@@ -48,10 +48,28 @@ fn banner(){
 //
 //
 fn help(){
-    println!("Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagagagagag");
-    println!("\timplant");
-    println!("\tlistener");
-    println!("\tmodules");
+    println!("Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagagagagag\n");
+    println!("Core Commands");
+    println!("-------------\n");
+    
+    println!("\texit");
+
+    println!("Listener Commands");
+    println!("-----------------\n");
+    
+    println!("Module Commands");
+    println!("---------------\n");
+
+    println!("Anchovy Commands");
+    println!("----------------\n");
+
+    println!("\tinfo");
+    println!("\texec");
+    println!("\tshell");
+    println!("\trun");
+    println!("\tkill");
+
+
 }
 
 // creates implant for server ip
