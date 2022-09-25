@@ -1,19 +1,54 @@
-
-
+use std::{process, fs};
+use std::io::{self, Write};
 
 fn main() {
-    println!("Hello, world!");
+    // print the super cool banner
+    banner();
+
+    // main program loop
+    loop {
+        // print the prompt and read in a command
+        print!("CrustyCrab $ ");
+        io::stdout().flush().unwrap();
+        let mut usr_cmd = String::new();
+        io::stdin().read_line(&mut usr_cmd);
+        // parses away arguments
+
+
+        // allows user to execute multiple commands in a single line seperated by ;
+        let mut cmds = usr_cmd.split(";");
+
+        // loop through each command given
+        let mut head = cmds.next();
+        while head != None {
+            let current_cmd = head.unwrap().trim();
+            // switch statement for each possible command
+            if current_cmd.eq("exit") { // quit the program
+                process::exit(0);
+            }
+            else if current_cmd.contains("help") { // print the help menu
+                help();
+            }
+            else if current_cmd.eq("banner") { // print the banner
+                banner();
+            }
+
+            head = cmds.next();
+        }
+    }
 }
 
 // print ascii art
 fn banner(){
-
+    let contents = fs::read_to_string("misc/banner.txt");
+    println!("{c}\n", c=contents.unwrap());
 }
 
 // prints help optional second argument for more specific details
 //
 //
 fn help(){
+    println!("Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagagagagag");
     println!("\timplant");
     println!("\tlistener");
     println!("\tmodules");
@@ -21,12 +56,11 @@ fn help(){
 
 // creates implant for server ip
 fn create_anchovy() {
-    println("Spongebob there's another anchovy");
+    println!("Spongebob there's another anchovy");
 }
 
-// open listener 
+// open listener
 fn open_crusty_crab(){
-
     println!("Opening crusty crab");
 }
 
@@ -34,7 +68,3 @@ fn open_crusty_crab(){
 fn select_host_ip(){
     print!("Enter host ip address: ");
 }
-
-
-
-

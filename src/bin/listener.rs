@@ -1,6 +1,6 @@
-// 
 //
-// Create listener that does udp and tcp 
+//
+// Create listener that does udp and tcp
 //
 // Send packets over
 //  - Bytes
@@ -8,9 +8,19 @@
 //  - DNS
 //
 //  - SSH (sftp)
+use std::net::{SocketAddr, UdpSocket, TcpSocket, IpAddr, Ipv4Addr};
 
+// Defines essential functions
+pub trait Listen {
+    fn run();
+    fn new_connection(addr: SocketAddr);
+}
 
-fn main(){
-    println!("hello");
-
+// Defines a UDP listener
+pub struct UdpListener() {
+    pub socket: UdpSocket,
+    // some vector of sorts to store already made connections
+}
+impl Listen for UdpListener {
+    // TODO
 }

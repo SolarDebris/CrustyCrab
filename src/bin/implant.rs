@@ -5,8 +5,7 @@
 use crabby_patty_formula::shell;
 
 
-fn main(){
+fn run(){
     println!("hello");
     shell(); 
-
 }
