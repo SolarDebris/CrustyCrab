@@ -18,9 +18,10 @@ pub trait Listen {
 
 // Defines a UDP listener
 pub struct UdpListener() {
-    pub socket: UdpSocket,
+    pub socket: UdpSocket
     // some vector of sorts to store already made connections
 }
+
 impl Listen for UdpListener {
     // TODO
 }
