@@ -21,11 +21,6 @@ pub struct UdpListener {
     pub socket: UdpSocket,
     // some vector of sorts to store already made connections
 }
-//impl Listen for UdpListener {
-pub struct UdpListener() {
-    pub socket: UdpSocket
-    // some vector of sorts to store already made connections
-}
 
 //impl Listen for UdpListener {
     // TODO

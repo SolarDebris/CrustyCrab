@@ -5,6 +5,19 @@
 This is a Command and Control framework developed in rust having in mind to have a fully functional api to create mallicious applications. 
 
 
+## Developing 
+
+To build the project using cargo
+```
+cargo build 
+```
+
+To run the binary 
+```
+cargo run --bin 
+```
+and select either crusty\_crab, listener, or implant
+
 
 ## Cross Compiling
 
