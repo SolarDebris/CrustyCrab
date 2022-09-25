@@ -17,27 +17,19 @@ pub trait Listen {
 }
 
 // Defines a UDP listener
-<<<<<<< HEAD
 pub struct UdpListener {
     pub socket: UdpSocket,
     // some vector of sorts to store already made connections
 }
 //impl Listen for UdpListener {
-=======
 pub struct UdpListener() {
     pub socket: UdpSocket
     // some vector of sorts to store already made connections
 }
 
-impl Listen for UdpListener {
->>>>>>> refs/remotes/origin/main
+//impl Listen for UdpListener {
     // TODO
 //}
-
-fn main() {
-
-}
-
 
 fn main(){
     println!("hello world");
