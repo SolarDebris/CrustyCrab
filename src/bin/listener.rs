@@ -8,7 +8,7 @@
 //  - DNS
 //
 //  - SSH (sftp)
-use std::net::{SocketAddr, UdpSocket, TcpSocket, IpAddr, Ipv4Addr};
+use std::net::{SocketAddr, UdpSocket, TcpStream, TcpListener, IpAddr, Ipv4Addr};
 
 // Defines essential functions
 pub trait Listen {
@@ -17,10 +17,14 @@ pub trait Listen {
 }
 
 // Defines a UDP listener
-pub struct UdpListener() {
+pub struct UdpListener {
     pub socket: UdpSocket,
     // some vector of sorts to store already made connections
 }
-impl Listen for UdpListener {
+//impl Listen for UdpListener {
     // TODO
+//}
+
+fn main() {
+
 }

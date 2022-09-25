@@ -44,14 +44,14 @@ fn main() {
 
 // print ascii art
 fn banner(){
-    let contents = fs::read_to_string("misc/banner.txt");
+    let contents = fs::read_to_string("static/banner.txt");
     println!("{c}\n", c=contents.unwrap());
 }
 
 // prints help optional second argument for more specific details
 
 fn help(){
-    let contents = fs::read_to_string("misc/help.txt");
+    let contents = fs::read_to_string("static/help.txt");
     println!("{c}\n", c=contents.unwrap());
 }
 
@@ -68,9 +68,9 @@ fn open_crusty_crab(){
 // select server ip
 fn select_host_ip(){
     print!("Enter host ip address: ");
+    io::stdout().flush().unwrap();
     let mut buf = String::new();
     io::stdin().read_line(&mut buf);
-    let ip: SocketAddr = buf.parse().expect("Unable to parse socket address");
-
+    let ip: SocketAddr = buf.trim().parse().expect("Unable to parse socket address");
     println!("{:?}", ip);
 }
