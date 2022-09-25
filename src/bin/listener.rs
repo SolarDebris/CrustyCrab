@@ -24,3 +24,8 @@ pub struct UdpListener() {
 impl Listen for UdpListener {
     // TODO
 }
+
+
+fn main(){
+    println!("hello world");
+}
