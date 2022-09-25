@@ -1,3 +1,4 @@
+
 Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagagagagag!
 
 Core Commands
@@ -8,14 +9,22 @@ exit -> exits the Crusty Crab
 
 Listener Commands
 -----------------
-    
+spawn -> spawns a listener
+port -> sets port to listen on for listener 
+
+
 Module Commands
 ---------------
+list -> lists all available modules
+set -> set module for usage
+
+
 
 Anchovy Commands
 ----------------
-info -> 
-exec -> 
-shell -> 
-run -> 
-kill -> 
+info -> show info on the anchovy
+		ip, hostname, os, privelege
+exec -> execute a single cmd command on the anchovy
+shell -> setup a reverse shell on the anchovy 
+run -> run a module on the anchovy  
+kill -> kills the anchovy 
