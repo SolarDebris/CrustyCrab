@@ -1,5 +1,6 @@
 use std::{process, fs};
 use std::io::{self, Write};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 fn main() {
     // print the super cool banner
@@ -31,6 +32,9 @@ fn main() {
             }
             else if current_cmd.eq("banner") { // print the banner
                 banner();
+            }
+            else if current_cmd.eq("selhost") { // only in here to test the function works as intended
+                select_host_ip();
             }
 
             head = cmds.next();
@@ -64,4 +68,9 @@ fn open_crusty_crab(){
 // select server ip
 fn select_host_ip(){
     print!("Enter host ip address: ");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf);
+    let ip: SocketAddr = buf.parse().expect("Unable to parse socket address");
+
+    println!("{:?}", ip);
 }
