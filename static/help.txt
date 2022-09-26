@@ -3,28 +3,34 @@ Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagag
 
 Core Commands
 -------------
+
 help -> prints the help menu
 banner -> prints the ascii banner
-exit -> exits the Crusty Crab
+exit
 
 Listener Commands
 -----------------
-spawn -> spawns a listener
-port -> sets port to listen on for listener 
 
+listen -> spawns a listener
+set host port -> sets port to listen on for listener 
+set protocol -> sets which protocol to use
 
 Module Commands
 ---------------
+
 list -> lists all available modules
-set -> set module for usage
+use -> set module for usage
 
 
 
 Anchovy Commands
 ----------------
+set anchovy protocol -> sets which protocol to use
+spawn -> compiles the implant executable 
 info -> show info on the anchovy
-		ip, hostname, os, privelege
+		ip, hostname, os, privelege, architecture
 exec -> execute a single cmd command on the anchovy
 shell -> setup a reverse shell on the anchovy 
 run -> run a module on the anchovy  
 kill -> kills the anchovy 
+
