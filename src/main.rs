@@ -27,6 +27,8 @@ fn main() {
         let mut head = cmds.next();
         while head != None {
             let current_cmd = head.unwrap().trim();
+
+            // !TODO Maybe switch to a match or switch statement 
             // switch statement for each possible command
             if current_cmd.eq("exit") { // quit the program
                 process::exit(0);
@@ -37,8 +39,20 @@ fn main() {
             else if current_cmd.eq("banner") { // print the banner
                 banner();
             }
-            else if current_cmd.eq("selhost") { // only in here to test the function works as intended
+            else if current_cmd.eq("listen") { 
+                // spawns listener
+                open_crusty_crab();
+            }
+            else if current_cmd.eq("spawn") {
+                // creates an implant
+                create_anchovy();
+            }
+            else if current_cmd.contains("exec") { // only in here to test the function works as intended
                 select_host_ip();
+            }
+            else if current_cmd.contains("set") {
+                // look for all commands that contain set
+                 
             }
 
             head = cmds.next();
