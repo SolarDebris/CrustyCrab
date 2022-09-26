@@ -5,7 +5,7 @@ use std::process::{Command};
 
 fn main() {
     // clear console first
-    Command::new("clear"). status(). unwrap();
+    Command::new("clear").status().unwrap();
     // print the super cool banner
     banner();
 
@@ -48,7 +48,7 @@ fn main() {
 
 // print ascii art
 fn banner(){
-    let contents = fs::read_to_string("static/banner.txt");
+    let contents = fs::read_to_string("static/art/spongerob.txt");
     println!("{c}\n", c=contents.unwrap());
 }
 
@@ -62,6 +62,7 @@ fn help(){
 // creates implant for server ip
 fn create_anchovy() {
     println!("Spongebob there's another anchovy");
+
 }
 
 // open listener
