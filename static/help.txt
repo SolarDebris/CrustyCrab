@@ -6,15 +6,15 @@ Core Commands
 
 help -> prints the help menu
 banner -> prints the ascii banner
-exit
+exit -> terminates the program
 
 Listener Commands
 -----------------
 
 listen -> spawns a listener
-sethost -> sets port to listen on for listener 
+setport -> sets port to listen on for listener 
 setpro -> sets which protocol to use
-selhost -> selects the IP to listen on for listener
+setip -> selects the IP to listen on for listener
 lkill -> kills the specified listener
 lslist -> lists all active listeners
 lkillall -> kills all listeners
