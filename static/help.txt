@@ -24,8 +24,7 @@ Module Commands
 
 listmod -> lists all available modules
 use -> set module for usage
-
-
+send -> sends the module set for use to the given victim
 
 Anchovy Commands
 ----------------
