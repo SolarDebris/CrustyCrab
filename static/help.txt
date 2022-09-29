@@ -28,7 +28,7 @@ send -> sends the module set for use to the given victim
 
 Anchovy Commands
 ----------------
-set anchovy protocol -> sets which protocol to use
+lsanch -> lists all anchovies connected
 spawn -> compiles the implant executable 
 info -> show info on the anchovy
 		ip, hostname, os, privelege, architecture
