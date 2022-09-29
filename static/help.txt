@@ -12,13 +12,17 @@ Listener Commands
 -----------------
 
 listen -> spawns a listener
-set host port -> sets port to listen on for listener 
-set protocol -> sets which protocol to use
+sethost -> sets port to listen on for listener 
+setpro -> sets which protocol to use
+selhost -> selects the IP to listen on for listener
+lkill -> kills the specified listener
+lslist -> lists all active listeners
+lkillall -> kills all listeners
 
 Module Commands
 ---------------
 
-list -> lists all available modules
+listmod -> lists all available modules
 use -> set module for usage
 
 
