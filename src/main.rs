@@ -75,17 +75,17 @@ fn main() {
                 let curr_head = command.next();
                 let curr = curr_head.unwrap().trim();
                 println!("{}", curr);
-                if curr.eq("") {
+                if curr.eq("listen") {
                     // list all anchovies and get all info
                     println!("Spongebob look at all the customers me boi"); 
                 }
-                else if curr.eq("select"){
+                else if curr.eq("payload"){
                  
                 }
                 else if curr.eq("kill"){
                     // kill anchovy based on its number
                     println!("sPongBOB what are you doin to me customers");
-                }et command = current_cmd.split(" ");
+                }
             }
             else if current_cmd.contains("anchovy") {
                 let mut command = current_cmd.split(" ");
