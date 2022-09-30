@@ -28,31 +28,68 @@ fn main() {
         while head != None {
             let current_cmd = head.unwrap().trim();
 
-            // !TODO Maybe switch to a match or switch statement 
-            // switch statement for each possible command
-            if current_cmd.eq("exit") { // quit the program
+            if current_cmd.eq("exit") || current_cmd.eq("quit") || current_cmd.eq("q"){ 
+                // quit the program
                 process::exit(0);
-            }
-            else if current_cmd.contains("help") { // print the help menu
+            } 
+            else if current_cmd.contains("help") { 
+                // print the help menu
                 help();
             }
             else if current_cmd.eq("banner") { // print the banner
                 banner();
             }
             else if current_cmd.eq("listen") { 
-                // spawns listener
+                // subset of listener commands
                 open_crusty_crab();
             }
             else if current_cmd.eq("spawn") {
                 // creates an implant
                 create_anchovy();
             }
-            else if current_cmd.contains("exec") { // only in here to test the function works as intended
+
+            else if current_cmd.eq("clear") || current_cmd.eq("cls") {
+                Command::new("clear").status().unwrap();
+            }
+            else if current_cmd.eq("whoami") {
+                Command::new("whoami").status().unwrap();
+            }
+            else if current_cmd.eq("ls") {
+                Command::new("ls -la").status().unwrap();
+            }
+            else if current_cmd.eq("") 
+                || current_cmd.eq("ls") 
+                || current_cmd.eq("") 
+                || current_cmd.contains("cat") 
+                || current_cmd.contains("ifconfig"){
+                Command::new(current_cmd).status().unwrap();
+            }
+            else if current_cmd.contains("exec") {
                 select_host_ip();
             }
             else if current_cmd.contains("set") {
                 // look for all commands that contain set
+                let command = current_cmd.split(" ");
+                println!("{}", current_cmd);     
+            }
+            else if current_cmd.contains("anchovy") {
+                let mut command = current_cmd.split(" ");
+
+                command.next();
+                let curr_head = command.next();
+                let curr = curr_head.unwrap().trim();
+                println!("{}", curr);
+                if curr.eq("ls") {
+                    // list all anchovies and get all info
+                    println!("Spongebob look at all the customers me boi"); 
+                }
+                else if curr.eq("select"){
                  
+                }
+                else if curr.eq("kill"){
+                    // kill anchovy based on its number
+                    println!("sPongBOB what are you doin to me customers");
+                }
             }
 
             head = cmds.next();
@@ -60,18 +97,20 @@ fn main() {
     }
 }
 
+
 // print ascii art
 fn banner(){
     let contents = fs::read_to_string("static/art/spongerob.txt");
     println!("{c}\n", c=contents.unwrap());
 }
 
-// prints help optional second argument for more specific details
 
+// prints help optional second argument for more specific details
 fn help(){
     let contents = fs::read_to_string("static/help.txt");
     println!("{c}\n", c=contents.unwrap());
 }
+
 
 // creates implant for server ip
 fn create_anchovy() {
@@ -79,10 +118,17 @@ fn create_anchovy() {
 
 }
 
+
 // open listener
 fn open_crusty_crab(){
     println!("Opening crusty crab");
 }
+
+
+// ```rust
+// select_host_ip()
+// ```
+
 
 // select server ip
 fn select_host_ip(){

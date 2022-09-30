@@ -12,11 +12,11 @@ pub fn shell() {
 }
 
 // executes a single arbitrary command
-pub fn execute_cmd(mut s: String) -> String {
+pub fn execute_cmd(s: String) -> String {
     if s.contains(" ") {
         let mut split = s.split_whitespace();
         let head = split.next().unwrap();
-        let mut tail: Vec<&str> = split.collect();
+        let tail: Vec<&str> = split.collect();
         let cmd = Command::new(head).args(tail).output().unwrap();
         return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
     }

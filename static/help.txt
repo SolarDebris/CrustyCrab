@@ -38,3 +38,9 @@ anchovy select -> select an anchovy for running anchovy commands
 run -> run a module on the anchovy  
 anchovy kill -> kills the anchovy 
 
+
+Unix Commands
+-------------
+ls
+whoami
+ifconfig
