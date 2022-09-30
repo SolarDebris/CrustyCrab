@@ -13,7 +13,7 @@ pub fn shell() {
 
 // executes a single arbitrary command
 pub fn execute_cmd(s: String) -> String {
-    if s.contains(" ") {
+    if s.contains(' ') {
         let mut split = s.split_whitespace();
         let head = split.next().unwrap();
         let tail: Vec<&str> = split.collect();

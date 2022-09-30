@@ -16,12 +16,12 @@ fn main() {
         print!("CrustyCrab $ ");
         io::stdout().flush().unwrap();
         let mut usr_cmd = String::new();
-        io::stdin().read_line(&mut usr_cmd);
+        let _output = io::stdin().read_line(&mut usr_cmd);
         // parses away arguments
 
 
         // allows user to execute multiple commands in a single line seperated by ;
-        let mut cmds = usr_cmd.split(";");
+        let mut cmds = usr_cmd.split(';');
 
         // loop through each command given
         let mut head = cmds.next();
@@ -69,7 +69,7 @@ fn main() {
             }
             else if current_cmd.contains("set") {
                 // look for all commands that contain set
-                let mut command = current_cmd.split(" ");
+                let mut command = current_cmd.split(' ');
 
                 command.next();
                 let curr_head = command.next();
@@ -88,7 +88,7 @@ fn main() {
                 }
             }
             else if current_cmd.contains("anchovy") {
-                let mut command = current_cmd.split(" ");
+                let mut command = current_cmd.split(' ');
 
                 command.next();
                 let curr_head = command.next();
@@ -150,7 +150,7 @@ fn select_host_ip(){
     print!("Enter host ip address: ");
     io::stdout().flush().unwrap();
     let mut buf = String::new();
-    io::stdin().read_line(&mut buf);
+    let _output = io::stdin().read_line(&mut buf);
     let ip: SocketAddr = buf.trim().parse().expect("Unable to parse socket address");
     println!("{:?}", ip);
 }
