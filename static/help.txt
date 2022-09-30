@@ -4,19 +4,19 @@ Sponge Boi me Bobe, it appears you have forgotten how to use my software! Agagag
 Core Commands
 -------------
 
-help -> prints the help menu
 banner -> prints the ascii banner
 exit -> terminates the program
+help -> prints the help menu
 
 Listener Commands
 -----------------
 
 listen -> spawns a listener
-set listen port -> sets port to listen on for listener 
-set listen pro -> sets which protocol to use
+listen exit -> kills all listeners
 listen kill -> kills the specified listener
 listen ls -> lists all active listeners
-listen exit -> kills all listeners
+set listen port -> sets port to listen on for listener 
+set listen pro -> sets which protocol to use
 
 Module Commands
 ---------------
@@ -28,19 +28,19 @@ send -> sends the module set for use to the target machine
 
 Anchovy Commands
 ----------------
-anchovy ls -> lists all anchovies connected
-spawn -> compiles the implant executable 
-anchovy info -> show info on the anchovy
-		ip, hostname, os, privelege, architecture
-exec -> execute a single cmd command on the anchovy
-shell -> setup a reverse shell on the anchovy 
-anchovy select -> select an anchovy for running anchovy commands
-run -> run a module on the anchovy  
 anchovy kill -> kills the anchovy 
+anchovy ls -> lists all anchovies connected and their information
+		ip, hostname, os, privelege, architecture
+anchovy select -> select an anchovy for running anchovy commands
+exec -> execute a single cmd command on the anchovy
+run -> run a module on the anchovy  
+shell -> setup a reverse shell on the anchovy 
+spawn -> compiles the implant executable 
+		ip, hostname, os, privelege, architecture
 
 
 Unix Commands
 -------------
+ifconfig
 ls
 whoami
-ifconfig
