@@ -57,10 +57,21 @@ fn main() {
             else if current_cmd.eq("ls") {
                 Command::new("ls -la").status().unwrap();
             }
-            else if current_cmd.eq("") 
-                || current_cmd.eq("ls") 
-                || current_cmd.eq("") 
+            else if current_cmd.eq("pwd") 
                 || current_cmd.contains("cat") 
+                || current_cmd.contains("cd") 
+                || current_cmd.contains("mkdir") 
+                || current_cmd.contains("rm") 
+                || current_cmd.contains("mv") 
+                || current_cmd.contains("cp") 
+                || current_cmd.contains("grep") 
+                || current_cmd.contains("diff") 
+                || current_cmd.contains("tar") 
+                || current_cmd.contains("cut") 
+                || current_cmd.contains("sort") 
+                || current_cmd.contains("uniq") 
+                || current_cmd.contains("awk") 
+                || current_cmd.contains("sed") 
                 || current_cmd.contains("ifconfig"){
                 Command::new(current_cmd).status().unwrap();
             }
