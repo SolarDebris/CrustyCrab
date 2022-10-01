@@ -40,9 +40,3 @@ shell -> setup a reverse shell on the anchovy
 spawn -> compiles the implant executable 
 		ip, hostname, os, privelege, architecture
 
-
-Unix Commands
--------------
-ifconfig
-ls
-whoami
