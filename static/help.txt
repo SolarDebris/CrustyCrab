@@ -14,6 +14,7 @@ Listener Commands
 listen -> spawns a listener
 listen exit -> kills all listeners
 listen kill -> kills the specified listener
+listen killall -> kills all active listeners
 listen ls -> lists all active listeners
 set listen port -> sets port to listen on for listener 
 set listen pro -> sets which protocol to use
@@ -29,6 +30,7 @@ send -> sends the module set for use to the target machine
 Anchovy Commands
 ----------------
 anchovy kill -> kills the anchovy 
+anchovy killall -> kills all anchovies
 anchovy ls -> lists all anchovies connected and their information
 		ip, hostname, os, privelege, architecture
 anchovy select -> select an anchovy for running anchovy commands
