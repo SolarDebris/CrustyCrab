@@ -12,10 +12,10 @@ Listener Commands
 -----------------
 
 listen -> spawns a listener
-listen exit -> kills all listeners
 listen kill -> kills the specified listener
 listen killall -> kills all active listeners
 listen ls -> lists all active listeners
+set listen ip -> designates the IP for the listener to use
 set listen port -> sets port to listen on for listener 
 set listen pro -> sets which protocol to use
 
