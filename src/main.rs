@@ -109,10 +109,13 @@ fn main() {
                     // list all anchovies and get all info
                     println!("Spongebob look at all the customers me boi"); 
                 }
-                else if curr.eq("select"){
-                 
+                else if curr.contains("select"){
+
                 }
-                else if curr.eq("kill"){
+                else if curr.eq("spawn"){
+                    create_anchovy();
+                }
+                else if curr.contains("kill"){
                     // kill anchovy based on its number
                     println!("sPongBOB what are you doin to me customers");
                 }
@@ -126,6 +129,7 @@ fn main() {
 
 // print ascii art
 fn banner(){
+    // !TODO make it so that it chooses a random ascii art
     let contents = fs::read_to_string("static/art/spongerob.txt");
     println!("{c}\n", c=contents.unwrap());
 }

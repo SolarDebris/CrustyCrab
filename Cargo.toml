@@ -1,6 +1,6 @@
 [package]
 name = "crusty_crab"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Alex Schmith", "Chandler Hake", "Robbie Heine"]
 #documentation =
@@ -19,7 +19,6 @@ opt-level = "z"
 lto = true
 panic = "abort"
 
-
 [profile.dev]
 opt-level = "z"
 panic = "unwind"
@@ -27,24 +26,8 @@ panic = "unwind"
 [profile.basic]
 inherits = "dev"
 
-[profile.level1]
-inherits = "dev"
-
-[profile.level2]
-inherits = "dev"
-
-[profile.level3]
-inherits = "dev"
-
-
-
 [profile.windows]
 inherits = "dev"
-
-
-
-
-
 
 [dependencies]
 run_script = "^0.10.0" 
@@ -54,8 +37,6 @@ gethostname = "0.2.3"
 bytes = "1.2.1"
 reqwest = "0.11"
 tokio = "1"
-
-
 
 
 [target.'cfg(windows)'.dependencies]
