@@ -130,7 +130,9 @@ fn main() {
 // print ascii art
 fn banner(){
     // !TODO make it so that it chooses a random ascii art
-    let contents = fs::read_to_string("static/art/spongerob.txt");
+    let mut file = "static/art/";
+    let banners = ["sponge.txt", "spongerob.txt", "squidward.txt"];
+    let contents = fs::read_to_string(file);
     println!("{c}\n", c=contents.unwrap());
 }
 
