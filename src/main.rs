@@ -2,6 +2,7 @@ use std::{process, fs};
 use std::io::{self, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::process::{Command};
+use rand::Rng;
 
 fn main() {
     // clear console first
@@ -130,8 +131,10 @@ fn main() {
 // print ascii art
 fn banner(){
     // !TODO make it so that it chooses a random ascii art
-    let mut file = "static/art/";
-    let banners = ["sponge.txt", "spongerob.txt", "squidward.txt"];
+
+    let mut rng = rand::thread_rng();
+
+    let mut file = format!("static/art/banner{}.txt",rng.gen_range(0..4));
     let contents = fs::read_to_string(file);
     println!("{c}\n", c=contents.unwrap());
 }
@@ -163,6 +166,7 @@ fn open_crusty_crab(){
 
 
 // select server ip
+// !TODO This is not necessary we just need to grab public ip of server and use that
 fn select_host_ip(){
     print!("Enter host ip address: ");
     io::stdout().flush().unwrap();
