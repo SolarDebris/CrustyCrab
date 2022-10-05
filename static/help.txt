@@ -13,9 +13,8 @@ Listener Commands
 
 listen -> spawns a listener
 listen kill -> kills the specified listener
-listen killall -> kills all active listeners
+listen exit -> kills all active listeners
 listen ls -> lists all active listeners
-set listen ip -> designates the IP for the listener to use
 set listen port -> sets port to listen on for listener 
 set listen pro -> sets which protocol to use
 
@@ -30,12 +29,14 @@ send -> sends the module set for use to the target machine
 Anchovy Commands
 ----------------
 anchovy kill -> kills the anchovy 
-anchovy killall -> kills all anchovies
+anchovy exit -> kills all anchovies
 anchovy ls -> lists all anchovies connected and their information
 		ip, hostname, os, privelege, architecture
 anchovy select -> select an anchovy for running anchovy commands
 exec -> execute a single cmd command on the anchovy
 run -> run a module on the anchovy  
+set anchovy ip -> sets the ip to connect to for the anchovy
+set anchovy os -> sets the anchovy os (linux/windows)
 shell -> setup a reverse shell on the anchovy 
 spawn -> compiles the implant executable 
 		ip, hostname, os, privelege, architecture

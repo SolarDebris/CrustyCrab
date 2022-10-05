@@ -6,6 +6,6 @@ use crabby_patty_formula::shell;
 
 
 fn main(){
-    println!("hello");
-    shell(); 
+    println!("order up");
+    //shell();
 }

@@ -44,35 +44,9 @@ fn main() {
                 // subset of listener commands
                 open_crusty_crab();
             }
-            else if current_cmd.eq("spawn") {
-                // creates an implant
-                create_anchovy();
-            }
-
-            else if current_cmd.eq("clear") || current_cmd.eq("cls") {
-                Command::new("clear").status().unwrap();
-            }
-            else if current_cmd.eq("whoami") {
-                Command::new("whoami").status().unwrap();
-            }
-            else if current_cmd.eq("ls") {
-                Command::new("ls -la").status().unwrap();
-            }
-            else if current_cmd.eq("pwd") 
-                || current_cmd.contains("cat") 
-                || current_cmd.contains("cd") 
-                || current_cmd.contains("mkdir") 
-                || current_cmd.contains("rm") 
-                || current_cmd.contains("mv") 
-                || current_cmd.contains("cp") 
-                || current_cmd.contains("grep") 
-                || current_cmd.contains("diff") 
-                || current_cmd.contains("tar") 
-                || current_cmd.contains("cut") 
-                || current_cmd.contains("sort") 
-                || current_cmd.contains("uniq") 
-                || current_cmd.contains("awk") 
-                || current_cmd.contains("sed") 
+            else if current_cmd.eq("pwd")
+                || current_cmd.eq("whoami")
+                || current_cmd.eq("clear")
                 || current_cmd.contains("ifconfig"){
                 Command::new(current_cmd).status().unwrap();
             }
@@ -92,9 +66,9 @@ fn main() {
                     println!("Spongebob look at all the customers me boi"); 
                 }
                 else if curr.eq("payload"){
-                 
+                    println!("Sending out patty")
                 }
-                else if curr.eq("kill"){
+                else if curr.eq("anchovy"){
                     // kill anchovy based on its number
                     println!("sPongBOB what are you doin to me customers");
                 }
@@ -108,17 +82,37 @@ fn main() {
                 println!("{}", curr);
                 if curr.eq("ls") {
                     // list all anchovies and get all info
-                    println!("Spongebob look at all the customers me boi"); 
+                    println!("Spongebob look at all the customers me boi (anchovy ls)");
                 }
                 else if curr.contains("select"){
-
+                    println!("One krabby patty coming up (anchovy select)")
                 }
                 else if curr.eq("spawn"){
                     create_anchovy();
                 }
                 else if curr.contains("kill"){
                     // kill anchovy based on its number
-                    println!("sPongBOB what are you doin to me customers");
+                    println!("sPongBOB what are you doin to me customers (anchovy kill)");
+                }
+            }
+            else if current_cmd.contains("listen") {
+                let mut command = current_cmd.split(' ');
+
+                command.next();
+
+                let mut curr_head = command.next();
+                let mut curr = curr_head.unwrap().trim();
+                println!("{}", curr);
+                if curr.eq("exit") {
+                    // list all anchovies and get all info
+                    println!("Squidward take the trash out its time to close");
+                }
+                else if curr.contains("kill"){
+
+                    println!("Closing the register")
+                }
+                else if curr.eq("ls"){
+                    println!("Spongebob look at all me customers")
                 }
             }
 
