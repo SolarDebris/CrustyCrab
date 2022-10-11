@@ -1,12 +1,9 @@
-//
-//
-// Create listener that does udp and tcp
-//
+use std::net::{SocketAddr, UdpSocket};
+
 // Send packets over
 //  - Bytes (UDP, TCP)
 //  - HTTP
 //  - DNS
-use std::net::{SocketAddr, UdpSocket, TcpStream, TcpListener, IpAddr, Ipv4Addr};
 
 // Defines essential functions
 pub trait Listen {
@@ -25,5 +22,7 @@ pub struct UdpListener {
 //}
 
 fn main(){
-    println!("hello world this is the listener");
+    let _port = 420;
+    let _protocol: &str = "http";
+
 }

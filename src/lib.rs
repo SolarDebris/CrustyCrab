@@ -1,5 +1,5 @@
 use std::process::Command;
-use std::net::{SocketAddr, UdpSocket, TcpStream, TcpListener, IpAddr, Ipv4Addr};
+use std::net::{UdpSocket};
 
 // Function to execute command
 //
@@ -35,7 +35,7 @@ pub fn get_info() -> &'static str {
 // Reads in bytes from the given UDP socket and returns the string
 pub fn read_udp(socket: UdpSocket, num_bytes: usize) -> String {
     let mut buf = vec![0; num_bytes];
-    let (_bytes, src) = socket.recv_from(&mut buf).unwrap();
+    let (_bytes, _src) = socket.recv_from(&mut buf).unwrap();
     return String::from_utf8_lossy(&buf[..]).into_owned();
 }
 

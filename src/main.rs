@@ -79,12 +79,6 @@ fn main() {
             {
                 let mut base = Command::new("sh");
                 let mut result = base.arg("-c").arg(current_cmd).status().unwrap();
-
-
-
-
-
-
             }
             else if current_cmd.contains("exec") {
                 println!("[+] Executing command");
@@ -208,7 +202,7 @@ fn open_crusty_crab(){
     println!("Opening crusty crab");
 
     let mut binding = Command::new("sh");
-    let mut result = binding.arg("-c").arg("cargo run --quiet --bin listener");
+    let mut result = binding.arg("-c").arg("cargo run --quiet --bin listener &");
 
     result.status().unwrap();
     //let ws = Workspace::current(&Workspace::self);
