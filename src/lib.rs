@@ -27,7 +27,7 @@ pub fn execute_cmd(s: String) -> String {
 }
 
 pub fn get_info() -> String {
-
+    return "test anchovy";
 
 }
 
