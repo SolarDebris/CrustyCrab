@@ -30,8 +30,7 @@ inherits = "dev"
 inherits = "dev"
 
 [dependencies]
-cargo = "0.65.0"
-run_script = "^0.10.0" 
+run_script = "^0.10.0"
 log = "0.4"
 socket2 = "0.4.7"
 gethostname = "0.2.3"

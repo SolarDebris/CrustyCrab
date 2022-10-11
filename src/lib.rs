@@ -26,7 +26,7 @@ pub fn execute_cmd(s: String) -> String {
     }
 }
 
-pub fn get_info() -> String {
+pub fn get_info() -> &'static str {
     return "test anchovy";
 
 }
