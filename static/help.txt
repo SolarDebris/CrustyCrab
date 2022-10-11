@@ -16,7 +16,9 @@ listen kill -> kills the specified listener
 listen exit -> kills all active listeners
 listen ls -> lists all active listeners
 set listen port -> sets port to listen on for listener 
-set listen pro -> sets which protocol to use
+set listen protocol -> sets which protocol to use
+    tcp, udp, http, dns
+
 
 Module Commands
 ---------------

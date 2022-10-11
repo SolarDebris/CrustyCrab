@@ -30,6 +30,7 @@ inherits = "dev"
 inherits = "dev"
 
 [dependencies]
+cargo = "0.65.0"
 run_script = "^0.10.0" 
 log = "0.4"
 socket2 = "0.4.7"
@@ -38,7 +39,7 @@ bytes = "1.2.1"
 reqwest = "0.11"
 tokio = "1"
 names = "0.14.0"
-iptables = "0.4"
+#iptables = "0.4"
 rand = "0.8.5"
 
 [target.'cfg(windows)'.dependencies]

@@ -26,6 +26,12 @@ pub fn execute_cmd(s: String) -> String {
     }
 }
 
+pub fn get_info() -> String {
+
+
+}
+
+
 // Reads in bytes from the given UDP socket and returns the string
 pub fn read_udp(socket: UdpSocket, num_bytes: usize) -> String {
     let mut buf = vec![0; num_bytes];

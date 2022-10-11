@@ -3,11 +3,9 @@
 // Create listener that does udp and tcp
 //
 // Send packets over
-//  - Bytes
+//  - Bytes (UDP, TCP)
 //  - HTTP
 //  - DNS
-//
-//  - SSH (sftp)
 use std::net::{SocketAddr, UdpSocket, TcpStream, TcpListener, IpAddr, Ipv4Addr};
 
 // Defines essential functions
@@ -27,5 +25,5 @@ pub struct UdpListener {
 //}
 
 fn main(){
-    println!("hello world");
+    println!("hello world this is the listener");
 }
