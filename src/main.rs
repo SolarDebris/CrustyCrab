@@ -3,6 +3,7 @@ use std::io::{self, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::process::{Command};
 use rand::Rng;
+use regex::Regex;
 use log::{info, warn, error, debug};
 
 
@@ -25,7 +26,10 @@ fn main() {
         let mut usr_cmd = String::new();
         let _output = io::stdin().read_line(&mut usr_cmd);
 
-        // parses away arguments
+        // regex that removes multiple spaces
+        let re = Regex::new(r"\s+").unwrap();
+        usr_cmd = re.replace_all(&usr_cmd, " ").to_string();
+        //let re = Regex::new(r"");
 
 
         // allows user to execute multiple commands in a single line seperated by ;
