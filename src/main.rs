@@ -209,8 +209,4 @@ fn open_crusty_crab(){
     let mut result = binding.arg("-c").arg("cargo run --quiet --bin listener &");
 
     result.status().unwrap();
-    //let ws = Workspace::current(&Workspace::self);
-    //let result = cargo::ops::run(&ws, );
 }
-
-
