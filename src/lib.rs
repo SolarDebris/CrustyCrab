@@ -44,7 +44,19 @@ impl Listen for Listener {
     }
 
     fn listen_udp(&self, address: SocketAddr){
-        println!("[+] Opening udp listener on port {}", self.port);
+        self.udp_sock = UdpSocket::bind(address);
+        println!("[+] Opening udp listener on port {}", address.port());
+        loop { // break loop if connection is made
+            let mut buffer = [0; 2048];
+            let (len, src) = self.udp_sock.recv_from(&mut buffer).unwrap();
+
+            // replace insides of .contains() with whatever string/key we are using to verify connection
+            if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
+                // call a seperate function which interacts with the target
+                // that way, if the target connection ends, the listener just
+                // automatically goes back to listening
+            }
+        }
     }
 
 }
