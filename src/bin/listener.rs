@@ -12,13 +12,7 @@ fn main(){
     let _port = 420;
     let _protocol: &str = "http";
 
-    let order = Listener {
-        udp_sock: ,
-        tcp_sock: ,
-        id: ,
-        status: ,
-        port: _port,
-    };
+    // add init() function to initialize a listener
 
 
 }
