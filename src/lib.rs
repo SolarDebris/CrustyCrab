@@ -1,6 +1,7 @@
 use std::process::Command;
 use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
+use std::sync::mpsc::{Receiver, Sender};
 
 
 //pub struct info {
@@ -8,6 +9,7 @@ use std::io::{Read, Write};
 //  os: String,
 //  hostname: String,
 //}
+
 
 pub struct Listener {
     pub udp_sock: Option<UdpSocket>,
@@ -27,18 +29,18 @@ pub fn new_lsn(i: u64) -> Listener {
     return ret;
 }
 
-pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr){
+pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr, tx: Sender<&str>, rx: Receiver<&str>){
     match protocol {
-        "udp" => listen_udp(lsn, address),
-        "tcp" => listen_tcp(lsn, address),
-        "http" => listen_tcp(lsn, address),
-        "dns" => listen_udp(lsn, address),
+        "udp" => listen_udp(lsn, address, tx, rx),
+        "tcp" => listen_tcp(lsn, address, tx, rx),
+        "http" => listen_tcp(lsn, address, tx, rx),
+        "dns" => listen_udp(lsn, address, tx, rx),
         &_ => todo!(),
     }
 }
 
 // listens using a TcpListener
-fn listen_tcp(lsn: &mut Listener, address: SocketAddr){
+fn listen_tcp(lsn: &mut Listener, address: SocketAddr, tx: Sender<&str>, rx: Receiver<&str>){
     lsn.status = 1;
     lsn.tcp_sock = Some(TcpListener::bind(address).unwrap());
     println!("[+] Opening tcp listener on port {}", address.port());
@@ -65,7 +67,7 @@ fn listen_tcp(lsn: &mut Listener, address: SocketAddr){
 }
 
 // listens using a UdpSocket
-fn listen_udp(lsn: &mut Listener, address: SocketAddr){
+fn listen_udp(lsn: &mut Listener, address: SocketAddr, tx: Sender<&str>, rx: Receiver<&str>){
     lsn.status = 1;
     lsn.udp_sock = Some(UdpSocket::bind(address).unwrap());
     println!("[+] Opening udp listener on port {}", address.port());

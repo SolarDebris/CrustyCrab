@@ -16,5 +16,7 @@ fn main(){
     let mut lsn = new_lsn(id);
 
     let address = SocketAddr::from(([127, 0, 0, 1], port));
-    crabby_patty_formula::lsn_run(&mut lsn, protocol, address);
+
+    //***Does Not Build with this; Feature for future implementation****
+    //crabby_patty_formula::lsn_run(&mut lsn, protocol, address, tx, rx);
 }
