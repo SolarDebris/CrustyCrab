@@ -1,5 +1,5 @@
 use std::net::{SocketAddr, UdpSocket, TcpListener};
-use crabby_patty_formula::{Listener};
+use crabby_patty_formula::*;
 
 // Send packets over
 //  - Bytes (UDP, TCP)
@@ -9,10 +9,12 @@ use crabby_patty_formula::{Listener};
 // Defines essential functions
 
 fn main(){
-    let _port = 420;
-    let _protocol: &str = "http";
+    let port: u16 = 420;
+    let id: u64 = 69;
+    let protocol: &str = "tcp";
 
-    // add init() function to initialize a listener
+    let mut lsn = new_lsn(id);
 
-
+    let address = SocketAddr::from(([127, 0, 0, 1], port));
+    crabby_patty_formula::lsn_run(&mut lsn, protocol, address);
 }
