@@ -47,6 +47,11 @@ fn listen_tcp(lsn: &mut Listener, address: SocketAddr, port: u16){
     lsn.tcp_sock = Some(TcpListener::bind(address).unwrap());
     println!("[+] Opening tcp listener on port {}", address.port());
     loop {
+        let cmd: u8 = rcv_client_command(lsn, &mut relay);
+        if cmd == 2 {
+            break;
+        }
+
         let acpt = lsn.tcp_sock.as_ref().expect("tcp listener not initialized").accept();
         match acpt {
             Ok((mut stream, _address)) => {
@@ -79,6 +84,10 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, port: u16){
     println!("[+] Opening udp listener on port {}", address.port());
     loop { // break loop if connection is made
         // Checks for commands from the client each iteration
+        let cmd: u8 = rcv_client_command(lsn, &mut relay);
+        if cmd == 2 {
+            break;
+        }
 
         let mut buffer = [0; 2048];
         let (bytes, src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
@@ -115,7 +124,7 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, relay: &mut UdpSocke
 // 5 => begin shell on anchovy
 // 6 => interact with shell on anchovy
 // 7 => terminate shell on anchovy
-fn rcv_client_command(lsn: &mut Listener, relay: UdpSocket) -> u8 {
+fn rcv_client_command(lsn: &mut Listener, relay: &mut UdpSocket) -> u8 {
     let mut buffer = [0; 1];
     let (_bytes, _src) = relay.recv_from(&mut buffer).unwrap();
     // only action needed to be taken inside this function is to send back listener info
