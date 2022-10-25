@@ -105,7 +105,10 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, port: u16){
 
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, relay: &mut UdpSocket) {
     println!("[+] Connection established by listener {}", lsn.id);
-    // TODO
+    loop {
+        // first check for client commands
+        
+    }
 }
 
 fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, relay: &mut UdpSocket) {
@@ -130,6 +133,7 @@ fn rcv_client_command(lsn: &mut Listener, relay: &mut UdpSocket) -> u8 {
     // only action needed to be taken inside this function is to send back listener info
     if buffer[0] == 1 {
         let mut lsn_info = get_lsn_info(lsn);
+        // TODO: send lsn_info back to client
     }
     return buffer[0];
 }
