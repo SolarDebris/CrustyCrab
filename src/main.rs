@@ -1,10 +1,11 @@
 use std::{fs, process};
 use std::io::{self, Write};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket, TcpListener, TcpStream, Shutdown};
 use std::process::{Command};
 use rand::Rng;
 use regex::Regex;
 use log::{info, warn, error, debug};
+use crabby_patty_formula::*;
 
 
 
@@ -14,7 +15,11 @@ fn main() {
     // print the super cool banner
     banner();
 
+    //Vec<(ID, PORT)>
+    let mut listen_tracker: Vec<(u64, u16, UdpSocket)> = Vec::new();
+    let mut relay_port = 2000;
 
+    let mut listen_port: u16 = 1337;
 
     // main program loop
     loop {
@@ -54,7 +59,9 @@ fn main() {
             else if current_cmd.eq("listen") {
                 println!("[+] Opening Crusty Crab");
                 info!("[+] Opening Crusty Crab");
-                open_crusty_crab();
+
+                //Passes vector of listeners and current port
+                open_crusty_crab(&mut listen_tracker, listen_port, relay_port);
             }
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
@@ -101,7 +108,15 @@ fn main() {
                     let value = command.next().unwrap().trim();
 
                     if option.eq("port") {
-                        println!("[+] Setting default listener port to {}", value);
+                        
+                        //Error check on setting port 
+                        let result: Result<u16, _> = value.parse();
+                        match result{
+                            Ok(result) => {
+                            listen_port = value.parse().unwrap();
+                            println!("[+] Setting default listener port to {}", value);},
+                            Err(e) => println!("Those are the wrong ingredients!"),
+                        }
                     }
                     else if option.eq("protocol"){
                         println!("[+] Setting default listener protocol to {}", value);
@@ -202,11 +217,19 @@ fn create_anchovy() {
 
 
 // open listener
-fn open_crusty_crab(){
+fn open_crusty_crab(tracker: &mut Vec<(u64, u16, UdpSocket)>, port: u16, relay_port: u16){
     println!("Opening crusty crab");
+    let mut local: String = "127.0.0.1:".to_owned();
+    local.push_str(&relay_port.to_string()[..]);
+    
+    let relay = UdpSocket::bind(local).unwrap();
+    tracker.push(((tracker.len() as u64) + 1, relay_port, relay));
 
-    let mut binding = Command::new("sh");
-    let mut result = binding.arg("-c").arg("cargo run --quiet --bin listener &");
 
-    result.status().unwrap();
+    let mut new_listen = new_lsn(tracker.len() as u64);
+    let address = SocketAddr::from(([127, 0, 0, 1], port));
+
+    //Hardcoded "UDP" until tracker variable is set up in main
+    lsn_run(&mut new_listen, "udp", address, port);
+
 }
