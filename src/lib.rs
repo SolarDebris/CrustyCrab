@@ -1,7 +1,16 @@
+/* CRUSTY CRAB API
+ * Authors: Robert Heine, Alexander Schmith, Chandler Hake
+ * Source: https://github.com/AlexSchmith/CrustyCrab
+ */
+
 use std::process::Command;
 use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
 use std::format;
+
+/*****************************/
+/*     USEFUL STRUCTURES     */
+/*****************************/
 
 pub struct sysinfo {
     arch: String,
@@ -36,6 +45,10 @@ pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr, port: u1
         &_ => todo!(),
     }
 }
+
+/****************************/
+/*     LISTENER METHODS     */
+/****************************/
 
 // listens using a TcpListener
 fn listen_tcp(lsn: &mut Listener, address: SocketAddr, port: u16){
@@ -219,6 +232,10 @@ pub fn get_lsn_info(lsn: &mut Listener) -> String {
     return lsn_info;
 }
 
+/*****************************************/
+/*     ENCRYPTION/DECRYPTION METHODS     */
+/*****************************************/
+
 // Boiler function for encoding our commands into a dns packet
 pub fn encode_dns(){
 
@@ -240,6 +257,9 @@ pub fn decode_http(){
 
 }
 
+/***************************/
+/*     IMPLANT METHODS     */
+/***************************/
 
 // creates a shell on the target
 pub fn shell() {
