@@ -3,11 +3,11 @@ use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
 use std::format;
 
-//pub struct info {
-//  arch: String,
-//  os: String,
-//  hostname: String,
-//}
+pub struct sysinfo {
+    arch: String,
+    os: String,
+    hostname: String,
+}
 
 
 pub struct Listener {
