@@ -152,6 +152,28 @@ pub fn get_lsn_info(lsn: &mut Listener) -> String {
     return lsn_info;
 }
 
+// Boiler function for encoding our commands into a dns packet
+pub fn encode_dns(){
+
+}
+
+// Boiler function for encoding our commands into a http packet
+pub fn encode_http(){
+
+}
+
+
+// Boiler function for decoding a dns packet for our code to read
+pub fn decode_dns(){
+
+}
+
+// Boiler function for decoding an http packet into our own protocol
+pub fn decode_http(){
+
+}
+
+
 // creates a shell on the target
 pub fn shell() {
     if let Ok(command) = Command::new("/bin/sh").output(){
