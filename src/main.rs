@@ -230,6 +230,6 @@ fn open_crusty_crab(tracker: &mut Vec<(u64, u16, UdpSocket)>, port: u16, relay_p
     let address = SocketAddr::from(([127, 0, 0, 1], port));
 
     //Hardcoded "UDP" until tracker variable is set up in main
-    lsn_run(&mut new_listen, "udp", address, port);
+    //lsn_run(&mut new_listen, "udp", address, port);
 
 }
