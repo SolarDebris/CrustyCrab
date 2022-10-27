@@ -271,6 +271,35 @@ pub fn execute_cmd(s: String) -> String {
     }
 }
 
+// main method for implants
+// dispatches to other methods based on network protocol
+pub fn imp_run(protocol: &str, address: SocketAddr) {
+    // TODO
+}
+
+// main for a udp implant
+fn imp_udp(lsn_addr: SocketAddr) {
+    // sandbox evasion
+
+    // persistence
+
+    // get public facing IP and pick a port, then initialize socket
+    // for sake of demos, stick to localhost
+    let address = SocketAddr::from(([127, 0, 0, 1], 2973));
+    let mut sock = UdpSocket::bind(address).unwrap();
+
+    // try to connect back to listener
+
+
+    // once connected, listen for control code
+}
+
+// main for a tcp implant
+fn imp_tcp(address: SocketAddr) {
+
+}
+
+
 /*******************************/
 /*     MISC HELPER METHODS     */
 /*******************************/
