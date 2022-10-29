@@ -35,17 +35,15 @@ fn main(){
     );
 
     // send some control codes
-    let mut code: u8 = 1;
-    while code < 7 {
-        if code == 2 {
-            code += 1;
-        }
-        let mut buffer = sb_arc.lock().unwrap();
-        buffer.cc = code;
-        drop(buffer);
-        thread::sleep(time::Duration::from_millis(10));
+    let mut code: u8 = 5;
+    let mut buffer = sb_arc.lock().unwrap();
+    buffer.cc = code;
+    drop(buffer);
+    thread::sleep(time::Duration::from_millis(1000));
+    // now we interact
+    loop {
         buffer = sb_arc.lock().unwrap();
-        println!("{} {}", code, String::from_utf8_lossy(&buffer.buff[..]));
+        println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
         code += 1;
         thread::sleep(time::Duration::from_millis(10));
     }
