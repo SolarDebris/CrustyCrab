@@ -3,17 +3,8 @@
 //
 
 use crabby_patty_formula::*;
-
+use std::net::SocketAddr;
 
 fn main(){
-    println!("order up");
-
-
-    // set up connection with either tcp or udp
-
-    // then listen for commands in the loop
-
-
-
-
+    imp_run("udp", SocketAddr::from(([127, 0, 0, 1], 2120)));
 }
