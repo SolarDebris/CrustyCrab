@@ -320,19 +320,13 @@ pub fn execute_cmd(s: String) -> String {
     if s.trim().contains(' ') {
         let mut split = s.trim().split_whitespace();
         let head = split.next().unwrap();
-        let tail = split;
+        let mut tail: Vec<&str> = split.collect();
+        tail.pop();
+        println!("{:?}", tail);
         match head {
-            "cd" => {
-                let new_dir = tail.peekable().peek().map_or("/", |x| *x);
-                let root = Path::new(new_dir);
-                match std::env::set_current_dir(&root) {
-                    Err(e) => return format!("{}", e),
-                    Ok(k) => todo!(),
-                }
-            },
-            "nul" => {
-                return head.to_string();
-            }
+            /*"cd" => {
+                // TODO
+            },*/
             head => {
                 let cmd = Command::new(head).args(tail).output();
                 match cmd{

@@ -3,6 +3,7 @@ use std::{thread, time};
 use std::sync::{Arc, Mutex};
 use crabby_patty_formula::*;
 use std::mem::drop;
+use std::io::{self, Write};
 
 // Send packets over
 //  - Bytes (UDP, TCP)
@@ -48,8 +49,10 @@ fn main(){
     let mut memo: String = String::new();
     loop {
         if swap {
+            print!("anchovy_shell $ ");
+            io::stdout().flush().unwrap();
             // read from stdin
-            std::io::stdin().read_line(&mut memo);
+            io::stdin().read_line(&mut memo);
             // write to shared buffer
             let mut buffer = sb_arc.lock().unwrap();
             buffer.buff = memo.as_bytes().to_vec();
@@ -58,7 +61,7 @@ fn main(){
         else {
             let mut buffer = sb_arc.lock().unwrap();
             if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
-                print!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+                println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
                 memo = String::new();
                 swap = true;
             }
