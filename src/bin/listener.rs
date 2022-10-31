@@ -45,20 +45,23 @@ fn main(){
     let mut swap = true;
 
     // now we interact
+    let mut memo: String = String::new();
     loop {
         if swap {
             // read from stdin
-            let mut inp = String::new();
-            std::io::stdin().read_line(&mut inp);
+            std::io::stdin().read_line(&mut memo);
             // write to shared buffer
             let mut buffer = sb_arc.lock().unwrap();
-            buffer.buff = inp.as_bytes().to_vec();
+            buffer.buff = memo.as_bytes().to_vec();
             swap = false;
         }
         else {
             let mut buffer = sb_arc.lock().unwrap();
-            println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
-            swap = true;
+            if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
+                print!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+                memo = String::new();
+                swap = true;
+            }
         }
 
         // wait until shared buffer changes

