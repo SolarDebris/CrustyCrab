@@ -49,7 +49,6 @@ fn main(){
     let mut memo: String = String::new();
     loop {
         if swap {
-            print!("anchovy_shell $ ");
             io::stdout().flush().unwrap();
             // read from stdin
             io::stdin().read_line(&mut memo);
@@ -61,7 +60,8 @@ fn main(){
         else {
             let mut buffer = sb_arc.lock().unwrap();
             if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
-                println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+                print!("{}\nanchovy_shell $ ", String::from_utf8_lossy(&buffer.buff[..]));
+                io::stdout().flush().unwrap();
                 memo = String::new();
                 swap = true;
             }
