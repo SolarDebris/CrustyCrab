@@ -36,7 +36,7 @@ First install the architecture platform that you need with the command
 
 ```
 rustup target add x86_64-pc-windows-msvc
-rustup target add aarch64-unknown-linux-gnu
+rustup target add x86_64-unknown-linux-gnu
 ```
 
 ## Testing 
