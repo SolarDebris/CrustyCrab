@@ -15,7 +15,7 @@ use std::io::{self, Write};
 fn main(){
     let port: u16 = 2120;
     let id: u64 = 69;
-    let protocol: &str = "udp";
+    let protocol: &str = "tcp";
 
     let mut lsn = new_lsn(id);
 

