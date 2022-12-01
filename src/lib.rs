@@ -3,6 +3,15 @@
  * Source: https://github.com/AlexSchmith/CrustyCrab
  */
 
+/* MODULES
+ * Includes the user-made modules within the program
+ */
+
+mod usr_mods;
+
+/* IMPORTS
+ */
+
 use std::process::Command;
 use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
