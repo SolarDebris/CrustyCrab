@@ -17,7 +17,7 @@ pub fn dispatch(s: &str) -> Vec<u8> {
         // add a match statement for your module below in the format
         // "module_name" => module_name::run(),
         "example" => example::run(),
-        &_ => todo!(),
+        &_ => "MODULE NOT FOUND".to_string(),
     };
 
     return result.into_bytes();

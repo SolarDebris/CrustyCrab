@@ -15,7 +15,7 @@ use std::io::{self, Write};
 fn main(){
     let port: u16 = 2120;
     let id: u64 = 69;
-    let protocol: &str = "tcp";
+    let protocol: &str = "udp";
 
     let mut lsn = new_lsn(id);
 
@@ -35,13 +35,30 @@ fn main(){
         }
     );
 
-    // send some control codes
+    // test the module system by executing a module
+    // commented out bc its not working at the moment
+    /*
+    let mut code: u8 = 6;
+    if true {
+        let mut buffer = sb_arc.lock().unwrap();
+        buffer.cc = code;
+    }
+    while true {
+        thread::sleep(time::Duration::from_millis(1000));
+        let mut buffer = sb_arc.lock().unwrap();
+        if !vec_is_zero(&buffer.buff) {
+            println!("{}", String::from_utf8_lossy(&buffer.buff));
+            break;
+        }
+    }
+    */
+
+    // shell time
     let mut code: u8 = 5;
     if true {
         let mut buffer = sb_arc.lock().unwrap();
         buffer.cc = code;
     }
-    thread::sleep(time::Duration::from_millis(1000));
 
     let mut swap = true;
 

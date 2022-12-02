@@ -1,6 +1,6 @@
 /* Example Module
  * Author: Robbie Heine
- * Description: This module acts as a template to demonstrate 
+ * Description: This module acts as a template to demonstrate
  * 				how to write modules for the Crusty Crab.
  * Supported Architectures: ALL
  * Supported Operating Systems: ALL
@@ -18,7 +18,7 @@
 // a String.
 
 pub fn run() -> String {
-	helper_func();
+	//helper_func();
 
 	// Return value must be a String, not &str. Conversion can be
 	return String::from("Done");

