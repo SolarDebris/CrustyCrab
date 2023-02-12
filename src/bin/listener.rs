@@ -35,24 +35,45 @@ fn main(){
         }
     );
 
+    thread::sleep(time::Duration::from_millis(5000));
+    
     // test the module system by executing a module
     // commented out bc its not working at the moment
-    /*
     let mut code: u8 = 6;
     if true {
         let mut buffer = sb_arc.lock().unwrap();
         buffer.cc = code;
     }
-    while true {
-        thread::sleep(time::Duration::from_millis(1000));
-        let mut buffer = sb_arc.lock().unwrap();
-        if !vec_is_zero(&buffer.buff) {
-            println!("{}", String::from_utf8_lossy(&buffer.buff));
-            break;
+    
+    let mut memo: String = "example".to_string();
+    let mut swap = true;
+    loop {
+        if swap {
+            io::stdout().flush().unwrap();
+            memo = "example".to_string();
+            // write to shared buffer
+            let mut buffer = sb_arc.lock().unwrap();
+            buffer.cc = 6;
+            buffer.buff = memo.as_bytes().to_vec();
+            swap = false;
         }
-    }
-    */
+        else {
+            let mut buffer = sb_arc.lock().unwrap();
+            if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
+                println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+                io::stdout().flush().unwrap();
+                memo = String::new();
+                break;
+            }
+        }
 
+        // wait until shared buffer changes
+        // print changed shared buffer
+        thread::sleep(time::Duration::from_millis(10));
+    }
+    
+
+    
     // shell time
     let mut code: u8 = 5;
     if true {
@@ -63,13 +84,16 @@ fn main(){
     let mut swap = true;
 
     // now we interact
+    print!("anchovy_shell $ ");
+    io::stdout().flush().unwrap();
     let mut memo: String = String::new();
     loop {
         if swap {
             io::stdout().flush().unwrap();
             // read from stdin
             io::stdin().read_line(&mut memo);
-            // write to shared buffer
+            // check if we need to execute a module
+            // write command to shared buffer
             let mut buffer = sb_arc.lock().unwrap();
             buffer.buff = memo.as_bytes().to_vec();
             swap = false;
@@ -77,7 +101,7 @@ fn main(){
         else {
             let mut buffer = sb_arc.lock().unwrap();
             if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
-                print!("{}\nanchovy_shell $ ", String::from_utf8_lossy(&buffer.buff[..]));
+                print!("{}anchovy_shell $ ", String::from_utf8_lossy(&buffer.buff[..]));
                 io::stdout().flush().unwrap();
                 memo = String::new();
                 swap = true;
@@ -88,5 +112,6 @@ fn main(){
         // print changed shared buffer
         thread::sleep(time::Duration::from_millis(10));
     }
+    
     thr.join().unwrap();
 }

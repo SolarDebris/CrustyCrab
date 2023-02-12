@@ -10,17 +10,18 @@ mod example;
 
 // takes in a &str (the name of the module), runs that module, and then
 // returns the output of the module as a vector of bytes.
-pub fn dispatch(s: &str) -> Vec<u8> {
-    let result = match s {
+pub fn dispatch(s: String) -> Vec<u8> {
+
+    let mut s_trimmed = String::from_utf8_lossy(&remove_null(&mut s.as_bytes().to_vec())).as_ref().to_string();
+    let result = match s_trimmed.as_str() {
 
         /*** DEV TODO ***/
         // add a match statement for your module below in the format
         // "module_name" => module_name::run(),
         "example" => example::run(),
-        &_ => "MODULE NOT FOUND".to_string(),
+        &_ => format!("MODULE NOT FOUND: {s_trimmed}\n").to_string(),
     };
-
-    return result.into_bytes();
+    return result.as_bytes().to_vec();
 }
 
 
@@ -32,4 +33,14 @@ pub fn list_mods() {
     // add a print statement below for your module in the following format:
     // println!("module_name - description of what the module does");
     println!("example - a template for developers to write their own modules");
+}
+
+// fixes bug where bagillion null bytes sadge :(
+pub fn remove_null(s: &mut Vec<u8>) -> Vec<u8> {
+    let mut frnt = s.pop().expect("Error: Vec Empty");
+    while frnt == 0 {
+        frnt = s.pop().expect("Error: Vec Empty");
+    }
+    s.push(frnt);
+    return s.to_vec();
 }

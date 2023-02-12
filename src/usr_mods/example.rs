@@ -21,7 +21,7 @@ pub fn run() -> String {
 	//helper_func();
 
 	// Return value must be a String, not &str. Conversion can be
-	return String::from("Done");
+	return String::from("Hello World!");
 }
 
 

