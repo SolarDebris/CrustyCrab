@@ -6,6 +6,8 @@ use rand::Rng;
 use regex::Regex;
 use log::{info, warn, error, debug};
 use crabby_patty_formula::*;
+use std::env;
+use std::path::Path;
 
 
 
@@ -63,6 +65,14 @@ fn main() {
                 //Passes vector of listeners and current port
                 open_crusty_crab(&mut listen_tracker, listen_port, relay_port);
             }
+            else if current_cmd.contains("cd") {
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let dir = split_cmd.next().unwrap();
+                if env::set_current_dir(&dir).is_err() {
+                    print!("Cannot access directory: {dir}\n")
+                }
+            }
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
                 || current_cmd.eq("clear")
@@ -73,7 +83,6 @@ fn main() {
                 || current_cmd.contains("ls")
                 //|| current_cmd.contains("mv")
                 //|| current_cmd.contains("cp")
-                //|| current_cmd.contains("cd")
                 //|| current_cmd.contains("mkdir")
                 //|| current_cmd.contains("rmdir")
                 //|| current_cmd.contains("rm")
