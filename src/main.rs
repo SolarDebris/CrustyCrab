@@ -66,11 +66,25 @@ fn main() {
                 open_crusty_crab(&mut listen_tracker, listen_port, relay_port);
             }
             else if current_cmd.contains("cd") {
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let dir = split_cmd.next().unwrap();
-                if env::set_current_dir(&dir).is_err() {
-                    print!("Cannot access directory: {dir}\n")
+                if current_cmd.len() > 3{
+                    let mut split_cmd = current_cmd.split(" ");
+                    split_cmd.next();
+                    let dir = split_cmd.next().unwrap();
+                    if let "~" = &*dir {
+                        // Set directory to home directory.
+                    }
+                    if Path::new(&dir).exists() {
+                        if env::set_current_dir(&dir).is_err() {
+                            // Will set the directory if no errors are envoked.
+                            print!("cd: permission denied: {dir}\n")
+                        }  
+                    }
+                    else {
+                        print!("cd: no such file or directory: {dir}\n");
+                    }
+                }
+                else {
+                    // Do something if there is no operand to "cd" (send to home).
                 }
             }
             else if current_cmd.eq("pwd")
