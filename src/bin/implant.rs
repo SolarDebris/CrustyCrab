@@ -1,7 +1,3 @@
-// executable implant
-//
-//
-
 use crabby_patty_formula::*;
 use std::net::SocketAddr;
 

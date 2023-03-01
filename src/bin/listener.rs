@@ -45,12 +45,12 @@ fn main(){
         buffer.cc = code;
     }
     
-    let mut memo: String = "example".to_string();
+    let mut memo: String = "sys_info".to_string();
     let mut swap = true;
     loop {
         if swap {
             io::stdout().flush().unwrap();
-            memo = "example".to_string();
+            memo = "sys_info".to_string();
             // write to shared buffer
             let mut buffer = sb_arc.lock().unwrap();
             buffer.cc = 6;
