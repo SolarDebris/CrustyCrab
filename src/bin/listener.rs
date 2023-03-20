@@ -1,3 +1,12 @@
+// Ignore Warnings
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(unused_imports)]
+#![allow(unused_must_use)]
+#![allow(unused_assignments)]
+#![allow(unreachable_code)]
+#![allow(dead_code)]
+
 use std::net::{SocketAddr, UdpSocket, TcpListener};
 use std::{thread, time};
 use std::sync::{Arc, Mutex};
@@ -36,7 +45,7 @@ fn main(){
     );
 
     thread::sleep(time::Duration::from_millis(5000));
-    
+
     // test the module system by executing a module
     // commented out bc its not working at the moment
     let mut code: u8 = 6;
@@ -71,7 +80,6 @@ fn main(){
         // print changed shared buffer
         thread::sleep(time::Duration::from_millis(10));
     }
-    
 
     
     // shell time
@@ -101,7 +109,7 @@ fn main(){
         else {
             let mut buffer = sb_arc.lock().unwrap();
             if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
-                print!("{}anchovy_shell $ ", String::from_utf8_lossy(&buffer.buff[..]));
+                print!("{}\nanchovy_shell $ ", String::from_utf8_lossy(&buffer.buff[..]));
                 io::stdout().flush().unwrap();
                 memo = String::new();
                 swap = true;

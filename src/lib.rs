@@ -3,6 +3,15 @@
  * Source: https://github.com/AlexSchmith/CrustyCrab
  */
 
+// Ignore Warnings
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(unused_imports)]
+#![allow(unused_must_use)]
+#![allow(unused_assignments)]
+#![allow(unreachable_code)]
+#![allow(dead_code)]
+
 /* MODULES
  * Includes the user-made modules within the program
  */

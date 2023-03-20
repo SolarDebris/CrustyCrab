@@ -1,3 +1,12 @@
+// Ignore Warnings
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(unused_imports)]
+#![allow(unused_must_use)]
+#![allow(unused_assignments)]
+#![allow(unreachable_code)]
+#![allow(dead_code)]
+
 use std::{fs, process};
 use std::io::{self, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket, TcpListener, TcpStream, Shutdown};
@@ -6,8 +15,6 @@ use rand::Rng;
 use regex::Regex;
 use log::{info, warn, error, debug};
 use crabby_patty_formula::*;
-
-
 
 fn main() {
     // clear console first
