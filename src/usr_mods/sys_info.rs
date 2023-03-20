@@ -40,10 +40,10 @@ fn get_distro() -> String {
 
 fn get_kernel_version() -> String {
 
-    return String::new("Hello World");
+    return String::from("Hello World");
 }
 
 fn get_user_accounts() -> String {
 
-    return String::new("Hello World");
+    return String::from("Hello World");
 }
