@@ -15,6 +15,11 @@ use rand::Rng;
 use regex::Regex;
 use log::{info, warn, error, debug};
 use crabby_patty_formula::*;
+use std::{thread, time};
+use std::sync::{Arc, Mutex};
+use std::mem::drop;
+
+
 
 fn main() {
     // clear console first
@@ -22,12 +27,17 @@ fn main() {
     // print the super cool banner
     banner();
 
-    //Vec<(ID, PORT)>
-    let mut listen_tracker: Vec<(u64, u16, UdpSocket)> = Vec::new();
+    //Vec<(ID, PORT, PROTOCOL, )>
+    let mut listen_tracker: Vec<(u64, u16, String/* , Arc<Mutex<SharedBuffer>>, u16*/)> = Vec::new();
     let mut relay_port = 2000;
-
-    let mut listen_port: u16 = 1337;
-
+    let mut sb_arc = Arc::new(Mutex::new(SharedBuffer {
+        cc: 0,
+        buff: [0; 2048].to_vec(),
+    }));
+    //Defaults
+    let mut protocol: u16 = 1;
+    let mut listen_port: u16 = 2120;
+    let mut local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
     // main program loop
     loop {
         // print the prompt and read in a command
@@ -68,7 +78,7 @@ fn main() {
                 info!("[+] Opening Crusty Crab");
 
                 //Passes vector of listeners and current port
-                open_crusty_crab(&mut listen_tracker, listen_port, relay_port);
+                sb_arc = Arc::clone(&open_crusty_crab(&mut listen_tracker, listen_port, local_address, protocol));
             }
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
@@ -95,6 +105,7 @@ fn main() {
                 || current_cmd.contains("man")
                 || current_cmd.contains("ifconfig")
             {
+                
                 let mut base = Command::new("sh");
                 let mut result = base.arg("-c").arg(current_cmd).status().unwrap();
             }
@@ -121,12 +132,22 @@ fn main() {
                         match result{
                             Ok(result) => {
                             listen_port = value.parse().unwrap();
-                            println!("[+] Setting default listener port to {}", value);},
+                            local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
+                            println!("[+] Setting default listener port to {}", listen_port);},
                             Err(e) => println!("Those are the wrong ingredients!"),
                         }
                     }
                     else if option.eq("protocol"){
-                        println!("[+] Setting default listener protocol to {}", value);
+                        match value{
+                            "udp" => {protocol = 1;  
+                                println!("[+] Setting default listener protocol to {}", "udp");},
+                            "tcp" => {protocol = 2;
+                                println!("[+] Setting default listener protocol to {}", "tcp");},
+                            "http" => println!("We didn't finish making your crabby patty yet!"),
+                            "dns" => println!("We didn't finish making your crabby patty yet!"),
+                            &_ => println!("Those are the wrong ingredients!"),
+                        
+                        }
                     }
                 }
                 else if curr.eq("payload"){
@@ -153,7 +174,7 @@ fn main() {
                 command.next();
                 let option = command.next().unwrap().trim();
                 let value = command.next().unwrap().trim();
-                if option.eq("ls") {
+                if option.eq("list") {
                     // list all anchovies and get all info
                     println!("[+] Listing all anchovies");
                     println!("Spongebob look at all the customers me boi ");
@@ -183,11 +204,18 @@ fn main() {
                     println!("Squidward take the trash out its time to close");
                 }
                 else if curr.contains("kill"){
-
-                    println!("Closing the register")
+                    let value = command.next().unwrap().trim();
+                    
+                    println!("Closing the register");
                 }
-                else if curr.eq("ls"){
-                    println!("Spongebob look at all me customers")
+                else if curr.eq("list"){
+                    println!("\nID\tPORT\tPROTOCOL");
+                    println!("------------------------------------------");
+                    for listener in &listen_tracker{
+                        println!("{:?}\t{:?}\t{}", listener.0, listener.1, listener.2.to_string().to_uppercase());
+                    }
+                    println!("------------------------------------------");
+                    println!("Spongebob look at all me customers!\n");
                 }
             }
 
@@ -224,19 +252,39 @@ fn create_anchovy() {
 
 
 // open listener
-fn open_crusty_crab(tracker: &mut Vec<(u64, u16, UdpSocket)>, port: u16, relay_port: u16){
-    println!("Opening crusty crab");
-    let mut local: String = "127.0.0.1:".to_owned();
-    local.push_str(&relay_port.to_string()[..]);
+fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, address: SocketAddr, prot_type: u16) -> Arc<Mutex<SharedBuffer>>{
+    // let mut local: String = "127.0.0.1:".to_owned();
+    // local.push_str(&relay_port.to_string()[..]);
+    // let relay = UdpSocket::bind(local).unwrap();
+    // tracker.push(((tracker.len() as u64) + 1, relay_port, relay));
     
-    let relay = UdpSocket::bind(local).unwrap();
-    tracker.push(((tracker.len() as u64) + 1, relay_port, relay));
-
-
+    
+    //Create a new listener
     let mut new_listen = new_lsn(tracker.len() as u64);
-    let address = SocketAddr::from(([127, 0, 0, 1], port));
+    let mut protocol = "udp";
+    if prot_type == 1{
+        protocol = "udp";
+        
+    }
+    else if prot_type == 2{
+        protocol = "tcp";
+    }
+    tracker.push(((tracker.len() as u64) + 1, relay_port, protocol.to_string()));
+    
+    //Create the shared buff and clone 
+    let mut sb: Arc<Mutex<SharedBuffer>> = Arc::new(Mutex::new(SharedBuffer {
+        cc: 0,
+        buff: [0; 2048].to_vec(),
+    }));
 
-    //Hardcoded "UDP" until tracker variable is set up in main
-    //lsn_run(&mut new_listen, "udp", address, port);
+    let mut sb_arc = Arc::clone(&sb);
+    
+    let thr = thread::spawn(move ||
+        {
+            crabby_patty_formula::lsn_run(&mut new_listen, protocol, address, &mut sb);
+        }
+    );
+    thread::sleep(time::Duration::from_millis(10));
+    return sb_arc;
 
 }

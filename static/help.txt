@@ -14,7 +14,7 @@ Listener Commands
 listen -> spawns a listener
 listen kill -> kills the specified listener
 listen exit -> kills all active listeners
-listen ls -> lists all active listeners
+listen list -> lists all active listeners
 set listen port -> sets port to listen on for listener 
 set listen protocol -> sets which protocol to use
     tcp, udp, http, dns
@@ -32,7 +32,7 @@ Anchovy Commands
 ----------------
 anchovy kill -> kills the anchovy 
 anchovy exit -> kills all anchovies
-anchovy ls -> lists all anchovies connected and their information
+anchovy list -> lists all anchovies connected and their information
 		ip, hostname, os, privelege, architecture
 anchovy select -> select an anchovy for running anchovy commands
 exec -> execute a single cmd command on the anchovy
