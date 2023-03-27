@@ -117,21 +117,47 @@ fn main() {
             else if current_cmd.contains("rmdir") {
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
-                let next_word = split_cmd.next().unwrap();
-                if fs::remove_dir_all(next_word).is_err() {
+                let object = split_cmd.next().unwrap();
+                if fs::remove_dir_all(object).is_err() {
                     // Does not remove symlinks.
-                    print!("Directory not Found. {} does not exist.\n", next_word)
+                    print!("Directory not Found. {} does not exist.\n", object);
                 }
                 //TODO
             }
             else if current_cmd.contains("rm"){
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
-                let next_word = split_cmd.next().unwrap();
-                if fs::remove_file(next_word).is_err() {
-                    print!("File not Found. {} does not exist.\n", next_word)
+                let object = split_cmd.next().unwrap();
+                if fs::remove_file(object).is_err() {
+                    print!("File not Found. {} does not exist.\n", object);
                 }
                 //TODO
+            }
+            else if current_cmd.contains("mv") {
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let name1 = split_cmd.next().unwrap();
+                let name2 = split_cmd.next().unwrap();
+                if fs::rename(name1, name2).is_err() {
+                    print!("\"{}\" does not exist\n", name1);
+                }
+            }
+            else if current_cmd.contains("mkdir") {
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let dir = split_cmd.next().unwrap();
+                if fs::create_dir(dir).is_err() {
+                    print!("could not create {}\n", dir);
+                }
+            }
+            else if current_cmd.contains("cp") {
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let file = split_cmd.next().unwrap();
+                let copy = split_cmd.next().unwrap();
+                if fs::copy(file, copy).is_err() {
+                    print!("Cannot copy {}", file);
+                }
             }
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
@@ -141,9 +167,6 @@ fn main() {
                 || current_cmd.eq("which")
                 || current_cmd.eq("whereis")
                 || current_cmd.contains("ls")
-                //|| current_cmd.contains("mv")
-                //|| current_cmd.contains("cp")
-                //|| current_cmd.contains("mkdir")
                 || current_cmd.contains("awk")
                 || current_cmd.contains("grep")
                 || current_cmd.contains("sed")
