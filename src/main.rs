@@ -18,7 +18,11 @@ use crabby_patty_formula::*;
 use std::{thread, time};
 use std::sync::{Arc, Mutex};
 use std::mem::drop;
+use std::env;
+use std::path::Path;
 
+extern crate directories;
+use directories::UserDirs;
 
 
 fn main() {
@@ -80,6 +84,55 @@ fn main() {
                 //Passes vector of listeners and current port
                 sb_arc = Arc::clone(&open_crusty_crab(&mut listen_tracker, listen_port, local_address, protocol));
             }
+            else if current_cmd.contains("cd") {
+                if current_cmd.len() > 3{
+                    let mut split_cmd = current_cmd.split(" ");
+                    split_cmd.next();
+                    let dir = split_cmd.next().unwrap();
+                    if dir.eq("~") {
+                        let user = UserDirs::new().unwrap();
+                        if env::set_current_dir(user.home_dir()).is_err() {
+                            // Will set the directory to home if no errors are envoked.
+                            print!("cd: permission denied: {}\n", user.home_dir().to_str().unwrap())
+                        } 
+                    }
+                    else if Path::new(&dir).exists() {
+                        if env::set_current_dir(&dir).is_err() {
+                            // Will set the directory if no errors are envoked.
+                            print!("cd: permission denied: {dir}\n")
+                        }  
+                    }
+                    else {
+                        print!("cd: no such file or directory: {dir}\n");
+                    }
+                }
+                else {
+                    let user = UserDirs::new().unwrap();
+                    if env::set_current_dir(user.home_dir()).is_err() {
+                        // Will set the directory to home if no errors are envoked.
+                        print!("cd: permission denied: {}\n", user.home_dir().to_str().unwrap())
+                    }
+                }
+            }
+            else if current_cmd.contains("rmdir") {
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let next_word = split_cmd.next().unwrap();
+                if fs::remove_dir_all(next_word).is_err() {
+                    // Does not remove symlinks.
+                    print!("Directory not Found. {} does not exist.\n", next_word)
+                }
+                //TODO
+            }
+            else if current_cmd.contains("rm"){
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let next_word = split_cmd.next().unwrap();
+                if fs::remove_file(next_word).is_err() {
+                    print!("File not Found. {} does not exist.\n", next_word)
+                }
+                //TODO
+            }
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
                 || current_cmd.eq("clear")
@@ -90,10 +143,7 @@ fn main() {
                 || current_cmd.contains("ls")
                 //|| current_cmd.contains("mv")
                 //|| current_cmd.contains("cp")
-                //|| current_cmd.contains("cd")
                 //|| current_cmd.contains("mkdir")
-                //|| current_cmd.contains("rmdir")
-                //|| current_cmd.contains("rm")
                 || current_cmd.contains("awk")
                 || current_cmd.contains("grep")
                 || current_cmd.contains("sed")
