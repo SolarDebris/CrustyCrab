@@ -146,7 +146,7 @@ fn main() {
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
                 let dir = split_cmd.next().unwrap();
-                if fs::create_dir(dir).is_err() {
+                if fs::create_dir_all(dir).is_err() {
                     print!("could not create {}\n", dir);
                 }
             }
