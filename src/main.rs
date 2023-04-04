@@ -115,12 +115,17 @@ fn main() {
                 }
             }
             else if current_cmd.contains("rmdir") {
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let object = split_cmd.next().unwrap();
-                if fs::remove_dir_all(object).is_err() {
+                if current_cmd.len() > 5 {
+                  let mut split_cmd = current_cmd.split(" ");
+                  split_cmd.next();
+                  let object = split_cmd.next().unwrap();
+                  if fs::remove_dir_all(object).is_err() {
                     // Does not remove symlinks.
                     print!("Directory not Found. {} does not exist.\n", object);
+                  }
+                }
+                else {
+                  print!("rmdir: Missing operand.\n")
                 }
                 //TODO
             }
