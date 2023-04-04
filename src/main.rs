@@ -125,13 +125,30 @@ fn main() {
                 //TODO
             }
             else if current_cmd.contains("rm"){
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let object = split_cmd.next().unwrap();
-                if fs::remove_file(object).is_err() {
-                    print!("File not Found. {} does not exist.\n", object);
+                if current_cmd.len() > 2 {
+                    let mut split_cmd = current_cmd.split(" ");
+                    split_cmd.next();
+                    let object = split_cmd.next().unwrap();
+                    if object.starts_with("-") && object.contains("rf") {
+                        if current_cmd.len() > 6 {
+                            let dir = split_cmd.next().unwrap();
+                            if fs::remove_dir_all(dir).is_err() {
+                                // Does not remove symlinks.
+                                print!("Directory not Found. {} does not exist.\n", object);
+                            }
+                        }
+                        else {
+                            print!("{}: missing operand\n", current_cmd)
+                        }
+                    }
+                    else if fs::remove_file(object).is_err() {
+                        print!("File not Found. {} does not exist.\n", object);
+                    }
+                    //TODO
                 }
-                //TODO
+                else {
+                    print!("{} missing operand\n", current_cmd)
+                }
             }
             else if current_cmd.contains("mv") {
                 let mut split_cmd = current_cmd.split(" ");
