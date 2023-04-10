@@ -24,6 +24,9 @@ use std::path::Path;
 extern crate directories;
 use directories::UserDirs;
 
+extern crate rustyline;
+use rustyline::{history, hint, completion, highlight, line_buffer};
+
 
 fn main() {
     // clear console first
