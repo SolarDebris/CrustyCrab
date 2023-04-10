@@ -18,7 +18,7 @@ use crabby_patty_formula::*;
 use std::{thread, time};
 use std::sync::{Arc, Mutex};
 use std::mem::drop;
-use std::env;
+use std::env::{self, current_dir};
 use std::path::Path;
 
 extern crate directories;
@@ -187,25 +187,48 @@ fn main() {
             else if current_cmd.contains("cat") {
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
-                let file = split_cmd.next().unwrap();
-                print!("{}\n", file);
-                let output = Command::new("cat").arg(file).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                let file = split_cmd.next();
+                if file != None {
+                    let output = Command::new("cat").arg(file.unwrap()).output().expect("failed to execute process");
+                    io::stdout().write_all(&output.stdout).unwrap();
+                    io::stderr().write_all(&output.stderr).unwrap();
+                }
             }
             else if current_cmd.contains("ls") {
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let file = split_cmd.next().unwrap();
-                print!("{}\n", file);
-                let output = Command::new("ls").arg(file).output().expect("ls command failed to start");
+                if current_cmd.len() > 2 {
+                    let mut split_cmd = current_cmd.split_whitespace();
+                    split_cmd.next();
+                    let last_args: Vec<&str> = split_cmd.collect();
+                    let output = Command::new("ls").args(last_args).output().expect("ls command failed to start");
+                    io::stdout().write_all(&output.stdout).unwrap();
+                    io::stderr().write_all(&output.stderr).unwrap();
+                }
+                else {
+                    let output = Command::new("ls").arg(current_dir().unwrap()).output().expect("ls command failed to start");
+                    io::stdout().write_all(&output.stdout).unwrap();
+                    io::stderr().write_all(&output.stderr).unwrap();
+                }
+            }
+            else if current_cmd.eq("pwd") {
+                print!("{}\n", current_dir().unwrap().to_str().unwrap())
+            }
+            else if current_cmd.eq("whoami") {
+                if current_cmd.len() > 6 {
+                    let mut split_cmd = current_cmd.split_whitespace();
+                    split_cmd.next();
+                    let last_args: Vec<&str> = split_cmd.collect();
+                    let output = Command::new("whoami").args(last_args).output().expect("failed to execute process");
+                    io::stdout().write_all(&output.stdout).unwrap();
+                    io::stderr().write_all(&output.stderr).unwrap();
+                }
+                let output = Command::new("whoami").output().expect("failed to execute process");
                 io::stdout().write_all(&output.stdout).unwrap();
                 io::stderr().write_all(&output.stderr).unwrap();
             }
-            else if current_cmd.eq("pwd")
-                || current_cmd.eq("whoami")
-                || current_cmd.eq("clear")
-                || current_cmd.eq("top")
+            else if current_cmd.eq("clear") {
+                Command::new("clear").status().unwrap();
+            }
+            else if current_cmd.eq("top")
                 || current_cmd.eq("w")
                 || current_cmd.eq("which")
                 || current_cmd.eq("whereis")
