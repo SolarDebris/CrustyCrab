@@ -73,7 +73,7 @@ fn main() {
                 // quit the program
                 process::exit(0);
             } 
-            else if current_cmd.contains("help") { 
+            else if current_cmd.starts_with("help") { 
                 // print the help menu
                 help();
             }
@@ -87,7 +87,7 @@ fn main() {
                 //Passes vector of listeners and current port
                 sb_arc = Arc::clone(&open_crusty_crab(&mut listen_tracker, listen_port, local_address, protocol));
             }
-            else if current_cmd.contains("cd") {
+            else if current_cmd.starts_with("cd") {
                 if current_cmd.len() > 3{
                     let mut split_cmd = current_cmd.split(" ");
                     split_cmd.next();
@@ -117,7 +117,7 @@ fn main() {
                     }
                 }
             }
-            else if current_cmd.contains("rmdir") {
+            else if current_cmd.starts_with("rmdir") {
                 if current_cmd.len() > 5 {
                   let mut split_cmd = current_cmd.split(" ");
                   split_cmd.next();
@@ -132,7 +132,7 @@ fn main() {
                 }
                 //TODO
             }
-            else if current_cmd.contains("rm"){
+            else if current_cmd.starts_with("rm"){
                 if current_cmd.len() > 2 {
                     let mut split_cmd = current_cmd.split(" ");
                     split_cmd.next();
@@ -158,7 +158,7 @@ fn main() {
                     print!("{} missing operand\n", current_cmd)
                 }
             }
-            else if current_cmd.contains("mv") {
+            else if current_cmd.starts_with("mv") {
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
                 let name1 = split_cmd.next().unwrap();
@@ -167,7 +167,7 @@ fn main() {
                     print!("\"{}\" does not exist\n", name1);
                 }
             }
-            else if current_cmd.contains("mkdir") {
+            else if current_cmd.starts_with("mkdir") {
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
                 let dir = split_cmd.next().unwrap();
@@ -175,7 +175,7 @@ fn main() {
                     print!("could not create {}\n", dir);
                 }
             }
-            else if current_cmd.contains("cp") {
+            else if current_cmd.starts_with("cp") {
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
                 let file = split_cmd.next().unwrap();
@@ -184,7 +184,7 @@ fn main() {
                     print!("Cannot copy {}", file);
                 }
             }
-            else if current_cmd.contains("cat") {
+            else if current_cmd.starts_with("cat") {
                 let mut split_cmd = current_cmd.split(" ");
                 split_cmd.next();
                 let file = split_cmd.next();
@@ -194,7 +194,7 @@ fn main() {
                     io::stderr().write_all(&output.stderr).unwrap();
                 }
             }
-            else if current_cmd.contains("ls") {
+            else if current_cmd.starts_with("ls") {
                 if current_cmd.len() > 2 {
                     let mut split_cmd = current_cmd.split_whitespace();
                     split_cmd.next();
@@ -212,7 +212,7 @@ fn main() {
             else if current_cmd.eq("pwd") {
                 print!("{}\n", current_dir().unwrap().to_str().unwrap())
             }
-            else if current_cmd.eq("whoami") {
+            else if current_cmd.starts_with("whoami") {
                 if current_cmd.len() > 6 {
                     let mut split_cmd = current_cmd.split_whitespace();
                     split_cmd.next();
@@ -221,30 +221,116 @@ fn main() {
                     io::stdout().write_all(&output.stdout).unwrap();
                     io::stderr().write_all(&output.stderr).unwrap();
                 }
-                let output = Command::new("whoami").output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                else {
+                    let output = Command::new("whoami").output().expect("failed to execute process");
+                    io::stdout().write_all(&output.stdout).unwrap();
+                    io::stderr().write_all(&output.stderr).unwrap();
+                }
             }
             else if current_cmd.eq("clear") {
                 Command::new("clear").status().unwrap();
             }
-            else if current_cmd.eq("top")
-                || current_cmd.eq("w")
-                || current_cmd.eq("which")
-                || current_cmd.eq("whereis")
-                || current_cmd.contains("awk")
-                || current_cmd.contains("grep")
-                || current_cmd.contains("sed")
-                || current_cmd.contains("dig")
-                || current_cmd.contains("nslookup")
-                || current_cmd.contains("ps")
-                || current_cmd.contains("uname")
-                || current_cmd.contains("man")
-                || current_cmd.contains("ifconfig")
-            {
-                
-                let mut base = Command::new("sh");
-                let mut result = base.arg("-c").arg(current_cmd).status().unwrap();
+            else if current_cmd.eq("top") {
+                Command::new("top").status().unwrap();
+            }
+            else if current_cmd.starts_with("which") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("which").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.starts_with("whereis") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("whereis").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.starts_with("w") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("w").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.contains("awk") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("awk").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();  
+                // Don't know if this actually works. // TODO
+            }
+            else if current_cmd.starts_with("grep") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("grep").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+                // Currently does not work. // TODO
+            }
+            else if current_cmd.starts_with("sed") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("sed").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+                // Don't know if this actually works. // TODO
+            }
+            else if current_cmd.starts_with("dig") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("dig").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.starts_with("nslookup") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("nslookup").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.starts_with("ps") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("ps").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.starts_with("uname") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("uname").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.contains("man") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("man").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.contains("ifconfig") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("ifconfig").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
             }
             else if current_cmd.contains("exec") {
                 println!("[+] Executing command");
