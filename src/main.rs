@@ -189,8 +189,18 @@ fn main() {
                 split_cmd.next();
                 let file = split_cmd.next().unwrap();
                 print!("{}\n", file);
-                let output = Command::new("/bin/cat").arg(file).output().expect("failed to execute process");
+                let output = Command::new("cat").arg(file).output().expect("failed to execute process");
                 io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
+            else if current_cmd.contains("ls") {
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let file = split_cmd.next().unwrap();
+                print!("{}\n", file);
+                let output = Command::new("ls").arg(file).output().expect("ls command failed to start");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
             }
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
@@ -199,7 +209,6 @@ fn main() {
                 || current_cmd.eq("w")
                 || current_cmd.eq("which")
                 || current_cmd.eq("whereis")
-                || current_cmd.contains("ls")
                 || current_cmd.contains("awk")
                 || current_cmd.contains("grep")
                 || current_cmd.contains("sed")
