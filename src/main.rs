@@ -121,11 +121,11 @@ fn main() {
                   let object = split_cmd.next().unwrap();
                   if fs::remove_dir_all(object).is_err() {
                     // Does not remove symlinks.
-                    print!("Directory not Found. {} does not exist.\n", object);
+                    print!("rmdir: no such directory: {} does not exist\n", object);
                   }
                 }
                 else {
-                  print!("rmdir: Missing operand.\n")
+                  print!("rmdir: missing operand\n")
                 }
                 //TODO
             }
@@ -139,7 +139,7 @@ fn main() {
                             let dir = split_cmd.next().unwrap();
                             if fs::remove_dir_all(dir).is_err() {
                                 // Does not remove symlinks.
-                                print!("Directory not Found. {} does not exist.\n", object);
+                                print!("rm: No such directory: {} does not exist\n", object);
                             }
                         }
                         else {
@@ -147,7 +147,7 @@ fn main() {
                         }
                     }
                     else if fs::remove_file(object).is_err() {
-                        print!("File not Found. {} does not exist.\n", object);
+                        print!("rm: {}: No such file or directory\n", object);
                     }
                     //TODO
                 }
