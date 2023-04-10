@@ -10,7 +10,7 @@
 use std::{fs, process};
 use std::io::{self, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket, TcpListener, TcpStream, Shutdown};
-use std::process::{Command};
+use std::process::{Command, Output};
 use rand::Rng;
 use regex::Regex;
 use log::{info, warn, error, debug};
@@ -184,6 +184,14 @@ fn main() {
                     print!("Cannot copy {}", file);
                 }
             }
+            else if current_cmd.contains("cat") {
+                let mut split_cmd = current_cmd.split(" ");
+                split_cmd.next();
+                let file = split_cmd.next().unwrap();
+                print!("{}\n", file);
+                let output = Command::new("/bin/cat").arg(file).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+            }
             else if current_cmd.eq("pwd")
                 || current_cmd.eq("whoami")
                 || current_cmd.eq("clear")
@@ -195,7 +203,6 @@ fn main() {
                 || current_cmd.contains("awk")
                 || current_cmd.contains("grep")
                 || current_cmd.contains("sed")
-                || current_cmd.contains("cat")
                 || current_cmd.contains("dig")
                 || current_cmd.contains("nslookup")
                 || current_cmd.contains("ps")
