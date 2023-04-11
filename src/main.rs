@@ -213,19 +213,12 @@ fn main() {
                 print!("{}\n", current_dir().unwrap().to_str().unwrap())
             }
             else if current_cmd.starts_with("whoami") {
-                if current_cmd.len() > 6 {
-                    let mut split_cmd = current_cmd.split_whitespace();
-                    split_cmd.next();
-                    let last_args: Vec<&str> = split_cmd.collect();
-                    let output = Command::new("whoami").args(last_args).output().expect("failed to execute process");
-                    io::stdout().write_all(&output.stdout).unwrap();
-                    io::stderr().write_all(&output.stderr).unwrap();
-                }
-                else {
-                    let output = Command::new("whoami").output().expect("failed to execute process");
-                    io::stdout().write_all(&output.stdout).unwrap();
-                    io::stderr().write_all(&output.stderr).unwrap();
-                }
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("whoami").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
             }
             else if current_cmd.eq("clear") {
                 Command::new("clear").status().unwrap();
