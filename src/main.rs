@@ -68,6 +68,7 @@ fn main() {
         let mut head = cmds.next();
         while head != None {
             let current_cmd = head.unwrap().trim();
+            let mut output: Output = Command::new("printf").arg("").output().expect("");
 
             if current_cmd.eq("exit") || current_cmd.eq("quit") || current_cmd.eq("q"){ 
                 // quit the program
@@ -189,9 +190,7 @@ fn main() {
                 split_cmd.next();
                 let file = split_cmd.next();
                 if file != None {
-                    let output = Command::new("cat").arg(file.unwrap()).output().expect("failed to execute process");
-                    io::stdout().write_all(&output.stdout).unwrap();
-                    io::stderr().write_all(&output.stderr).unwrap();
+                    output = Command::new("cat").arg(file.unwrap()).output().expect("failed to execute process");
                 }
             }
             else if current_cmd.starts_with("ls") {
@@ -199,14 +198,10 @@ fn main() {
                     let mut split_cmd = current_cmd.split_whitespace();
                     split_cmd.next();
                     let last_args: Vec<&str> = split_cmd.collect();
-                    let output = Command::new("ls").args(last_args).output().expect("ls command failed to start");
-                    io::stdout().write_all(&output.stdout).unwrap();
-                    io::stderr().write_all(&output.stderr).unwrap();
+                    output = Command::new("ls").args(last_args).output().expect("ls command failed to start");
                 }
                 else {
-                    let output = Command::new("ls").arg(current_dir().unwrap()).output().expect("ls command failed to start");
-                    io::stdout().write_all(&output.stdout).unwrap();
-                    io::stderr().write_all(&output.stderr).unwrap();
+                    output = Command::new("ls").arg(current_dir().unwrap()).output().expect("ls command failed to start");
                 }
             }
             else if current_cmd.eq("pwd") {
@@ -216,9 +211,7 @@ fn main() {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("whoami").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("whoami").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.eq("clear") {
                 Command::new("clear").status().unwrap();
@@ -230,23 +223,19 @@ fn main() {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("which").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("which").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.starts_with("whereis") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("whereis").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("whereis").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.starts_with("w") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("w").args(last_args).output().expect("failed to execute process");
+                output = Command::new("w").args(last_args).output().expect("failed to execute process");
                 io::stdout().write_all(&output.stdout).unwrap();
                 io::stderr().write_all(&output.stderr).unwrap();
             }
@@ -254,25 +243,21 @@ fn main() {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("awk").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();  
+                output = Command::new("awk").args(last_args).output().expect("failed to execute process");
                 // Don't know if this actually works. // TODO
             }
             else if current_cmd.starts_with("grep") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("grep").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("grep").args(last_args).output().expect("failed to execute process");
                 // Currently does not work. // TODO
             }
             else if current_cmd.starts_with("sed") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("sed").args(last_args).output().expect("failed to execute process");
+                output = Command::new("sed").args(last_args).output().expect("failed to execute process");
                 io::stdout().write_all(&output.stdout).unwrap();
                 io::stderr().write_all(&output.stderr).unwrap();
                 // Don't know if this actually works. // TODO
@@ -281,7 +266,7 @@ fn main() {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("dig").args(last_args).output().expect("failed to execute process");
+                output = Command::new("dig").args(last_args).output().expect("failed to execute process");
                 io::stdout().write_all(&output.stdout).unwrap();
                 io::stderr().write_all(&output.stderr).unwrap();
             }
@@ -289,49 +274,37 @@ fn main() {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("nslookup").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("nslookup").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.starts_with("ps") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("ps").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("ps").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.starts_with("uname") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("uname").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("uname").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.contains("man") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("man").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("man").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.contains("ifconfig") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("ifconfig").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("ifconfig").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.starts_with("touch") {
                 let mut split_cmd = current_cmd.split_whitespace();
                 split_cmd.next();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let output = Command::new("touch").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+                output = Command::new("touch").args(last_args).output().expect("failed to execute process");
             }
             else if current_cmd.contains("exec") {
                 println!("[+] Executing command");
@@ -442,7 +415,8 @@ fn main() {
                     println!("Spongebob look at all me customers!\n");
                 }
             }
-
+            io::stdout().write_all(&output.stdout).unwrap();
+            io::stderr().write_all(&output.stderr).unwrap();
             head = cmds.next();
         }
     }
