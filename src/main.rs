@@ -78,16 +78,6 @@ fn main() {
                 // print the help menu
                 help();
             }
-            else if current_cmd.eq("banner") { // print the banner
-                banner();
-            }
-            else if current_cmd.eq("listen") {
-                println!("[+] Opening Crusty Crab");
-                info!("[+] Opening Crusty Crab");
-
-                //Passes vector of listeners and current port
-                sb_arc = Arc::clone(&open_crusty_crab(&mut listen_tracker, listen_port, local_address, protocol));
-            }
             else if current_cmd.starts_with("cd") {
                 if current_cmd.len() > 3{
                     let mut split_cmd = current_cmd.split(" ");
@@ -118,193 +108,30 @@ fn main() {
                     }
                 }
             }
-            else if current_cmd.starts_with("rmdir") {
-                if current_cmd.len() > 5 {
-                  let mut split_cmd = current_cmd.split(" ");
-                  split_cmd.next();
-                  let object = split_cmd.next().unwrap();
-                  if fs::remove_dir_all(object).is_err() {
-                    // Does not remove symlinks.
-                    print!("rmdir: no such directory: {} does not exist\n", object);
-                  }
-                }
-                else {
-                  print!("rmdir: missing operand\n")
-                }
-                //TODO
-            }
-            else if current_cmd.starts_with("rm"){
-                if current_cmd.len() > 2 {
-                    let mut split_cmd = current_cmd.split(" ");
-                    split_cmd.next();
-                    let object = split_cmd.next().unwrap();
-                    if object.starts_with("-") && object.contains("rf") {
-                        if current_cmd.len() > 6 {
-                            let dir = split_cmd.next().unwrap();
-                            if fs::remove_dir_all(dir).is_err() {
-                                // Does not remove symlinks.
-                                print!("rm: No such directory: {} does not exist\n", object);
-                            }
-                        }
-                        else {
-                            print!("{}: missing operand\n", current_cmd)
-                        }
-                    }
-                    else if fs::remove_file(object).is_err() {
-                        print!("rm: {}: No such file or directory\n", object);
-                    }
-                    //TODO
-                }
-                else {
-                    print!("{} missing operand\n", current_cmd)
-                }
-            }
-            else if current_cmd.starts_with("mv") {
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let name1 = split_cmd.next().unwrap();
-                let name2 = split_cmd.next().unwrap();
-                if fs::rename(name1, name2).is_err() {
-                    print!("\"{}\" does not exist\n", name1);
-                }
-            }
-            else if current_cmd.starts_with("mkdir") {
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let dir = split_cmd.next().unwrap();
-                if fs::create_dir_all(dir).is_err() {
-                    print!("could not create {}\n", dir);
-                }
-            }
-            else if current_cmd.starts_with("cp") {
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let file = split_cmd.next().unwrap();
-                let copy = split_cmd.next().unwrap();
-                if fs::copy(file, copy).is_err() {
-                    print!("Cannot copy {}", file);
-                }
-            }
-            else if current_cmd.starts_with("cat") {
-                let mut split_cmd = current_cmd.split(" ");
-                split_cmd.next();
-                let file = split_cmd.next();
-                if file != None {
-                    output = Command::new("cat").arg(file.unwrap()).output().expect("failed to execute process");
-                }
-            }
-            else if current_cmd.starts_with("ls") {
-                if current_cmd.len() > 2 {
-                    let mut split_cmd = current_cmd.split_whitespace();
-                    split_cmd.next();
-                    let last_args: Vec<&str> = split_cmd.collect();
-                    output = Command::new("ls").args(last_args).output().expect("ls command failed to start");
-                }
-                else {
-                    output = Command::new("ls").arg(current_dir().unwrap()).output().expect("ls command failed to start");
-                }
-            }
-            else if current_cmd.eq("pwd") {
-                print!("{}\n", current_dir().unwrap().to_str().unwrap())
-            }
-            else if current_cmd.starts_with("whoami") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("whoami").args(last_args).output().expect("failed to execute process");
-            }
-            else if current_cmd.eq("clear") {
-                Command::new("clear").status().unwrap();
-            }
             else if current_cmd.eq("top") {
                 Command::new("top").status().unwrap();
             }
-            else if current_cmd.starts_with("which") {
+            else if current_cmd.starts_with("vim") {
                 let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
+                let cmd = split_cmd.next().unwrap();
                 let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("which").args(last_args).output().expect("failed to execute process");
+                Command::new("vim").args(last_args).status().unwrap();
             }
-            else if current_cmd.starts_with("whereis") {
+            else if current_cmd.starts_with("nano") {
                 let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
+                let cmd = split_cmd.next().unwrap();
                 let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("whereis").args(last_args).output().expect("failed to execute process");
+                Command::new("nano").args(last_args).status().unwrap();
             }
-            else if current_cmd.starts_with("w") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("w").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
+            else if current_cmd.eq("banner") { // print the banner
+                banner();
             }
-            else if current_cmd.contains("awk") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("awk").args(last_args).output().expect("failed to execute process");
-                // Don't know if this actually works. // TODO
-            }
-            else if current_cmd.starts_with("grep") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("grep").args(last_args).output().expect("failed to execute process");
-                // Currently does not work. // TODO
-            }
-            else if current_cmd.starts_with("sed") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("sed").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
-                // Don't know if this actually works. // TODO
-            }
-            else if current_cmd.starts_with("dig") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("dig").args(last_args).output().expect("failed to execute process");
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stderr().write_all(&output.stderr).unwrap();
-            }
-            else if current_cmd.starts_with("nslookup") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("nslookup").args(last_args).output().expect("failed to execute process");
-            }
-            else if current_cmd.starts_with("ps") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("ps").args(last_args).output().expect("failed to execute process");
-            }
-            else if current_cmd.starts_with("uname") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("uname").args(last_args).output().expect("failed to execute process");
-            }
-            else if current_cmd.contains("man") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("man").args(last_args).output().expect("failed to execute process");
-            }
-            else if current_cmd.contains("ifconfig") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("ifconfig").args(last_args).output().expect("failed to execute process");
-            }
-            else if current_cmd.starts_with("touch") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                split_cmd.next();
-                let last_args: Vec<&str> = split_cmd.collect();
-                output = Command::new("touch").args(last_args).output().expect("failed to execute process");
+            else if current_cmd.eq("listen") {
+                println!("[+] Opening Crusty Crab");
+                info!("[+] Opening Crusty Crab");
+
+                //Passes vector of listeners and current port
+                sb_arc = Arc::clone(&open_crusty_crab(&mut listen_tracker, listen_port, local_address, protocol));
             }
             else if current_cmd.contains("exec") {
                 println!("[+] Executing command");
@@ -413,6 +240,18 @@ fn main() {
                     }
                     println!("------------------------------------------");
                     println!("Spongebob look at all me customers!\n");
+                }
+            }
+            else {
+                let mut split_cmd = current_cmd.split_whitespace();
+                let cmd = split_cmd.next().unwrap();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let test_args: Vec<&str> = last_args.clone();
+                if Command::new(cmd).args(test_args).output().is_ok() {
+                    output = Command::new(cmd).args(last_args).output().expect("failed to execute process");
+                }
+                else {
+                    print!("Crusty_Crab: command not found: {}\n", cmd)
                 }
             }
             io::stdout().write_all(&output.stdout).unwrap();
