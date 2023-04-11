@@ -325,6 +325,14 @@ fn main() {
                 io::stdout().write_all(&output.stdout).unwrap();
                 io::stderr().write_all(&output.stderr).unwrap();
             }
+            else if current_cmd.starts_with("touch") {
+                let mut split_cmd = current_cmd.split_whitespace();
+                split_cmd.next();
+                let last_args: Vec<&str> = split_cmd.collect();
+                let output = Command::new("touch").args(last_args).output().expect("failed to execute process");
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stderr().write_all(&output.stderr).unwrap();
+            }
             else if current_cmd.contains("exec") {
                 println!("[+] Executing command");
                 info!("[+] Executing command");
