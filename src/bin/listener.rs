@@ -32,7 +32,7 @@ fn main(){
 
     let mut sb: Arc<Mutex<SharedBuffer>> = Arc::new(Mutex::new(SharedBuffer {
         cc: 0,
-        buff: [0; 2048].to_vec(),
+        buff: Vec::<u8>::new(),
     }));
 
     let mut sb_arc = Arc::clone(&sb);
