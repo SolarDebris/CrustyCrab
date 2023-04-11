@@ -50,10 +50,10 @@ fn main() {
         // print the prompt and read in a command
         // !TODO Make main shell more posix compliant
 
-        print!("CrustyCrab $ ");
         io::stdout().flush().unwrap();
+        let mut rust_inline = rustyline::DefaultEditor::new();
         let mut usr_cmd = String::new();
-        let _output = io::stdin().read_line(&mut usr_cmd);
+        let mut usr_cmd = rust_inline.expect("failed to execute process").readline("CrustyCrab $ ").unwrap();
 
         // regex that removes multiple spaces
         let re = Regex::new(r"\s+").unwrap();
