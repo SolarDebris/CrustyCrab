@@ -24,7 +24,7 @@ use std::io::{self, Write};
 fn main(){
     let port: u16 = 2120;
     let id: u64 = 69;
-    let protocol: &str = "udp";
+    let protocol: &str = "tcp";
 
     let mut lsn = new_lsn(id);
 
@@ -32,7 +32,7 @@ fn main(){
 
     let mut sb: Arc<Mutex<SharedBuffer>> = Arc::new(Mutex::new(SharedBuffer {
         cc: 0,
-        buff: Vec::<u8>::new(),
+        buff: vec![],
     }));
 
     let mut sb_arc = Arc::clone(&sb);
@@ -45,7 +45,7 @@ fn main(){
     );
 
     thread::sleep(time::Duration::from_millis(5000));
-
+    /*
     // test the module system by executing a module
     // commented out bc its not working at the moment
     let mut code: u8 = 6;
@@ -81,7 +81,7 @@ fn main(){
         thread::sleep(time::Duration::from_millis(10));
     }
 
-    
+    */
     // shell time
     let mut code: u8 = 5;
     if true {

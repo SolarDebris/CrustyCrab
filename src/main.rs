@@ -32,7 +32,7 @@ fn main() {
     let mut relay_port = 2000;
     let mut sb_arc = Arc::new(Mutex::new(SharedBuffer {
         cc: 0,
-        buff: Vec::<u8>::new(),
+        buff: [0; 2048].to_vec(),
     }));
     //Defaults
     let mut protocol: u16 = 1;
@@ -274,7 +274,7 @@ fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, addr
     //Create the shared buff and clone 
     let mut sb: Arc<Mutex<SharedBuffer>> = Arc::new(Mutex::new(SharedBuffer {
         cc: 0,
-        buff: Vec::<u8>::new(),
+        buff: [0; 2048].to_vec(),
     }));
 
     let mut sb_arc = Arc::clone(&sb);
