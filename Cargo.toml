@@ -41,6 +41,7 @@ names = "0.14.0"
 #iptables = "0.4"
 rand = "0.8.5"
 regex = "1.6.0"
+scan_dir = "0.3.3"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser"] }

