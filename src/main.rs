@@ -242,7 +242,7 @@ fn main() {
                     println!("Spongebob look at all me customers!\n");
                 }
             }
-            else {
+            else if current_cmd.len() > 0 {
                 let mut split_cmd = current_cmd.split_whitespace();
                 let cmd = split_cmd.next().unwrap();
                 let last_args: Vec<&str> = split_cmd.collect();
