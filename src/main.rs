@@ -78,6 +78,9 @@ fn main() {
                 // print the help menu
                 help();
             }
+            else if current_cmd.contains("|") || current_cmd.contains(">"){
+                let mut result = Command::new("sh").arg("-c").arg(current_cmd).status().unwrap();
+            }
             else if current_cmd.starts_with("cd") {
                 if current_cmd.len() > 3{
                     let mut split_cmd = current_cmd.split(" ");
@@ -242,7 +245,7 @@ fn main() {
                     println!("Spongebob look at all me customers!\n");
                 }
             }
-            else {
+            else if current_cmd.len() > 0 {
                 let mut split_cmd = current_cmd.split_whitespace();
                 let cmd = split_cmd.next().unwrap();
                 let last_args: Vec<&str> = split_cmd.collect();
