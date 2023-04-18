@@ -146,54 +146,61 @@ fn main() {
                 let mut command = current_cmd.split(' ');
 
                 command.next();
-                let curr = command.next().unwrap().trim();
-                if curr.eq("listen") {
-                    // list all anchovies and get all info
+                let check = command.next();
 
-                    let option = command.next().unwrap().trim();
-                    let value = command.next().unwrap().trim();
-
-                    if option.eq("port") {
-                        
-                        //Error check on setting port 
-                        let result: Result<u16, _> = value.parse();
-                        match result{
-                            Ok(result) => {
-                            listen_port = value.parse().unwrap();
-                            local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
-                            println!("\x1b[33m[+] Setting default listener port to {}\x1b[0m", listen_port);},
-                            Err(e) => println!("\x1b[33mThose are the wrong ingredients!\x1b[0m"),
+                if check != None {
+                    let curr = check.unwrap();
+                    if curr.eq("listen") {
+                        // list all anchovies and get all info
+    
+                        let option = command.next().unwrap().trim();
+                        let value = command.next().unwrap().trim();
+    
+                        if option.eq("port") {
+                            
+                            //Error check on setting port 
+                            let result: Result<u16, _> = value.parse();
+                            match result{
+                                Ok(result) => {
+                                listen_port = value.parse().unwrap();
+                                local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
+                                println!("\x1b[33m[+] Setting default listener port to {}\x1b[0m", listen_port);},
+                                Err(e) => println!("\x1b[33mThose are the wrong ingredients!\x1b[0m"),
+                            }
+                        }
+                        else if option.eq("protocol"){
+                            match value{
+                                "udp" => {protocol = 1;  
+                                    println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "udp");},
+                                "tcp" => {protocol = 2;
+                                    println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "tcp");},
+                                "http" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                                "dns" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                                &_ => println!("\x1b[31mThose are the wrong ingredients!\x1b[0m"),
+                            
+                            }
                         }
                     }
-                    else if option.eq("protocol"){
-                        match value{
-                            "udp" => {protocol = 1;  
-                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "udp");},
-                            "tcp" => {protocol = 2;
-                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "tcp");},
-                            "http" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
-                            "dns" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
-                            &_ => println!("\x1b[31mThose are the wrong ingredients!\x1b[0m"),
-                        
+                    else if curr.eq("payload"){
+                        println!("\x1b[33mSending out patty\x1b[0m")
+                    }
+                    else if curr.eq("anchovy"){
+                        // kill anchovy based on its number
+    
+                        let option = command.next().unwrap().trim();
+                        let value = command.next().unwrap().trim();
+    
+                        if option.eq("ip"){
+                            println!("\x1b[33m[+] Setting anchovy server ip to {}\x1b[0m", value);
                         }
+                        else if option.eq("os"){
+                            println!("\x1b[33m[+] Setting default anchovy os to {}\x1b[0m", value);
+                        }
+                        println!("\x1b[32msPongBOB what are you doin to me customers\x1b[0m");
                     }
                 }
-                else if curr.eq("payload"){
-                    println!("\x1b[33mSending out patty\x1b[0m")
-                }
-                else if curr.eq("anchovy"){
-                    // kill anchovy based on its number
-
-                    let option = command.next().unwrap().trim();
-                    let value = command.next().unwrap().trim();
-
-                    if option.eq("ip"){
-                        println!("\x1b[33m[+] Setting anchovy server ip to {}\x1b[0m", value);
-                    }
-                    else if option.eq("os"){
-                        println!("\x1b[33m[+] Setting default anchovy os to {}\x1b[0m", value);
-                    }
-                    println!("\x1b[32msPongBOB what are you doin to me customers\x1b[0m");
+                else {
+                    println!("AAARRRRRGGG! SpongeBob me boy! Not enough parameters!")
                 }
             }
             else if current_cmd.contains("anchovy") {
