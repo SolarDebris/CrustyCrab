@@ -107,6 +107,9 @@ fn main() {
                                 println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
                             } 
                         }
+                        else {
+                            println!("cd: no such file or directory: {dir}");
+                        }
 
                     }
                     else if Path::new(&dir).exists() {
