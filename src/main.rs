@@ -53,7 +53,8 @@ fn main() {
         io::stdout().flush().unwrap();
         let mut rust_inline = rustyline::DefaultEditor::new();
         let mut usr_cmd = String::new();
-        let mut usr_cmd = rust_inline.expect("failed to execute process").readline("CrustyCrab $ ").unwrap();
+        let prompt = format!("\x1b[33mCrustyCrab ({}) $ \x1b[0m", current_dir().unwrap().file_name().unwrap().to_str().unwrap());
+        let mut usr_cmd = rust_inline.expect("failed to execute process").readline(prompt.as_str()).unwrap();
 
         // regex that removes multiple spaces
         let re = Regex::new(r"\s+").unwrap();
@@ -90,24 +91,24 @@ fn main() {
                         let user = UserDirs::new().unwrap();
                         if env::set_current_dir(user.home_dir()).is_err() {
                             // Will set the directory to home if no errors are envoked.
-                            print!("cd: permission denied: {}\n", user.home_dir().to_str().unwrap())
+                            println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
                         } 
                     }
                     else if Path::new(&dir).exists() {
                         if env::set_current_dir(&dir).is_err() {
                             // Will set the directory if no errors are envoked.
-                            print!("cd: permission denied: {dir}\n")
+                            println!("cd: permission denied: {dir}")
                         }  
                     }
                     else {
-                        print!("cd: no such file or directory: {dir}\n");
+                        println!("cd: no such file or directory: {dir}");
                     }
                 }
                 else {
                     let user = UserDirs::new().unwrap();
                     if env::set_current_dir(user.home_dir()).is_err() {
                         // Will set the directory to home if no errors are envoked.
-                        print!("cd: permission denied: {}\n", user.home_dir().to_str().unwrap())
+                        println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
                     }
                 }
             }
@@ -130,14 +131,14 @@ fn main() {
                 banner();
             }
             else if current_cmd.eq("listen") {
-                println!("[+] Opening Crusty Crab");
+                println!("\x1b[33m[+] Opening Crusty Crab\x1b[0m");
                 info!("[+] Opening Crusty Crab");
 
                 //Passes vector of listeners and current port
                 sb_arc = Arc::clone(&open_crusty_crab(&mut listen_tracker, listen_port, local_address, protocol));
             }
             else if current_cmd.contains("exec") {
-                println!("[+] Executing command");
+                println!("\x1b[33m[+] Executing command\x1b[0m");
                 info!("[+] Executing command");
             }
             else if current_cmd.contains("set") {
@@ -160,25 +161,25 @@ fn main() {
                             Ok(result) => {
                             listen_port = value.parse().unwrap();
                             local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
-                            println!("[+] Setting default listener port to {}", listen_port);},
-                            Err(e) => println!("Those are the wrong ingredients!"),
+                            println!("\x1b[33m[+] Setting default listener port to {}\x1b[0m", listen_port);},
+                            Err(e) => println!("\x1b[33mThose are the wrong ingredients!\x1b[0m"),
                         }
                     }
                     else if option.eq("protocol"){
                         match value{
                             "udp" => {protocol = 1;  
-                                println!("[+] Setting default listener protocol to {}", "udp");},
+                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "udp");},
                             "tcp" => {protocol = 2;
-                                println!("[+] Setting default listener protocol to {}", "tcp");},
-                            "http" => println!("We didn't finish making your crabby patty yet!"),
-                            "dns" => println!("We didn't finish making your crabby patty yet!"),
-                            &_ => println!("Those are the wrong ingredients!"),
+                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "tcp");},
+                            "http" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                            "dns" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                            &_ => println!("\x1b[31mThose are the wrong ingredients!\x1b[0m"),
                         
                         }
                     }
                 }
                 else if curr.eq("payload"){
-                    println!("Sending out patty")
+                    println!("\x1b[33mSending out patty\x1b[0m")
                 }
                 else if curr.eq("anchovy"){
                     // kill anchovy based on its number
@@ -187,12 +188,12 @@ fn main() {
                     let value = command.next().unwrap().trim();
 
                     if option.eq("ip"){
-                        println!("[+] Setting anchovy server ip to {}", value);
+                        println!("\x1b[33m[+] Setting anchovy server ip to {}\x1b[0m", value);
                     }
                     else if option.eq("os"){
-                        println!("[+] Setting default anchovy os to {}", value);
+                        println!("\x1b[33m[+] Setting default anchovy os to {}\x1b[0m", value);
                     }
-                    println!("sPongBOB what are you doin to me customers");
+                    println!("\x1b[32msPongBOB what are you doin to me customers\x1b[0m");
                 }
             }
             else if current_cmd.contains("anchovy") {
@@ -203,20 +204,20 @@ fn main() {
                 let value = command.next().unwrap().trim();
                 if option.eq("list") {
                     // list all anchovies and get all info
-                    println!("[+] Listing all anchovies");
-                    println!("Spongebob look at all the customers me boi ");
+                    println!("\x1b[33m[+] Listing all anchovies\x1b[0m");
+                    println!("\x1b[32mSpongebob look at all the customers me boi \x1b[0m");
                 }
                 else if option.contains("select"){
-                    println!("[+] Selected anchovy {}", value);
-                    println!("One krabby patty coming up (anchovy select)");
+                    println!("\x1b[33m[+] Selected anchovy {}\x1b[0m", value);
+                    println!("\x1b[33mOne krabby patty coming up (anchovy select)\x1b[0m");
                 }
                 else if option.eq("spawn"){
                     create_anchovy();
                 }
                 else if option.contains("kill"){
                     // kill anchovy based on its number
-                    println!("[-] Killing anchovy");
-                    println!("sPongBOB what are you doin to me customers (anchovy kill)");
+                    println!("\x1b[33m[-] Killing anchovy\x1b[0m");
+                    println!("\x1b[32msPongBOB what are you doin to me customers (anchovy kill)\x1b[0m");
                 }
             }
             else if current_cmd.contains("listen") {
@@ -228,21 +229,21 @@ fn main() {
                 let mut curr = curr_head.unwrap().trim();
                 if curr.eq("exit") {
                     // list all anchovies and get all info
-                    println!("Squidward take the trash out its time to close");
+                    println!("\x1b[32mSquidward take the trash out its time to close\x1b[0m");
                 }
                 else if curr.contains("kill"){
                     let value = command.next().unwrap().trim();
                     
-                    println!("Closing the register");
+                    println!("\x1b[33mClosing the register\x1b[0m");
                 }
                 else if curr.eq("list"){
-                    println!("\nID\tPORT\tPROTOCOL");
-                    println!("------------------------------------------");
+                    println!("\x1b[34m\nID\tPORT\tPROTOCOL\x1b[0m");
+                    println!("\x1b[34m------------------------------------------\x1b[0m");
                     for listener in &listen_tracker{
-                        println!("{:?}\t{:?}\t{}", listener.0, listener.1, listener.2.to_string().to_uppercase());
+                        println!("\x1b[34m{:?}\t{:?}\t{}\x1b[0m", listener.0, listener.1, listener.2.to_string().to_uppercase());
                     }
-                    println!("------------------------------------------");
-                    println!("Spongebob look at all me customers!\n");
+                    println!("\x1b[34m------------------------------------------\x1b[0m");
+                    println!("\x1b[32mSpongebob look at all me customers!\n\x1b[0m");
                 }
             }
             else if current_cmd.len() > 0 {
@@ -254,7 +255,7 @@ fn main() {
                     output = Command::new(cmd).args(last_args).output().expect("failed to execute process");
                 }
                 else {
-                    print!("Crusty_Crab: command not found: {}\n", cmd)
+                    println!("Crusty_Crab: command not found: {}", cmd)
                 }
             }
             io::stdout().write_all(&output.stdout).unwrap();
@@ -271,20 +272,20 @@ fn banner(){
     let banner = format!("static/art/banner{}.txt",rng.gen_range(0..13));
     let contents = fs::read_to_string(&banner);
 
-    println!("{c}\n", c=contents.unwrap());
+    println!("\x1b[32m{c}\n\x1b[0m", c=contents.unwrap());
 }
 
 
 // prints help optional second argument for more specific details
 fn help(){
     let contents = fs::read_to_string("static/help.txt");
-    println!("{c}\n", c=contents.unwrap());
+    println!("\x1b[36m{c}\n\x1b[0m", c=contents.unwrap());
 }
 
 
 // creates implant for server ip
 fn create_anchovy() {
-    println!("Spongebob there's another anchovy");
+    println!("\x1b[32mSpongebob there's another anchovy\x1b[0m");
 
     let mut binding = Command::new("sh");
     let mut result  = binding.arg("-c").arg("cargo build -q --bin implant");
