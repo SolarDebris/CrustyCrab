@@ -91,13 +91,23 @@ fn main() {
                 if current_cmd.len() > 3{
                     let mut split_cmd = current_cmd.split(" ");
                     split_cmd.next();
+                    let user = UserDirs::new().unwrap();
                     let dir = split_cmd.next().unwrap();
-                    if dir.eq("~") {
-                        let user = UserDirs::new().unwrap();
-                        if env::set_current_dir(user.home_dir()).is_err() {
-                            // Will set the directory to home if no errors are envoked.
-                            println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
-                        } 
+                    if dir.contains("~") {
+                        let full_home_dir = dir.replace("~", user.home_dir().to_str().unwrap());
+                        if dir.eq("~") {
+                            if env::set_current_dir(user.home_dir()).is_err() {
+                                // Will set the directory to home if no errors are envoked.
+                                println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
+                            } 
+                        }
+                        else if Path::new(&full_home_dir).exists() {
+                            if env::set_current_dir(full_home_dir).is_err() {
+                                // Will set the directory to home if no errors are envoked.
+                                println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
+                            } 
+                        }
+
                     }
                     else if Path::new(&dir).exists() {
                         if env::set_current_dir(&dir).is_err() {
