@@ -69,7 +69,6 @@ fn main() {
         let mut head = cmds.next();
         while head != None {
             let current_cmd = head.unwrap().trim();
-            let mut output: Output = Command::new("printf").arg("").output().expect("");
 
             if current_cmd.eq("exit") || current_cmd.eq("quit") || current_cmd.eq("q"){ 
                 // quit the program
@@ -111,21 +110,6 @@ fn main() {
                         println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
                     }
                 }
-            }
-            else if current_cmd.eq("top") {
-                Command::new("top").status().unwrap();
-            }
-            else if current_cmd.starts_with("vim") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                let cmd = split_cmd.next().unwrap();
-                let last_args: Vec<&str> = split_cmd.collect();
-                Command::new("vim").args(last_args).status().unwrap();
-            }
-            else if current_cmd.starts_with("nano") {
-                let mut split_cmd = current_cmd.split_whitespace();
-                let cmd = split_cmd.next().unwrap();
-                let last_args: Vec<&str> = split_cmd.collect();
-                Command::new("nano").args(last_args).status().unwrap();
             }
             else if current_cmd.eq("banner") { // print the banner
                 banner();
@@ -257,16 +241,13 @@ fn main() {
                 let mut split_cmd = current_cmd.split_whitespace();
                 let cmd = split_cmd.next().unwrap();
                 let last_args: Vec<&str> = split_cmd.collect();
-                let test_args: Vec<&str> = last_args.clone();
-                if Command::new(cmd).args(test_args).output().is_ok() {
-                    output = Command::new(cmd).args(last_args).output().expect("failed to execute process");
-                }
+                let test_args = last_args.clone();
+                if Command::new(cmd).args(test_args).status().is_ok() {}
                 else {
                     println!("Crusty_Crab: command not found: {}", cmd)
                 }
             }
-            io::stdout().write_all(&output.stdout).unwrap();
-            io::stderr().write_all(&output.stderr).unwrap();
+
             head = cmds.next();
         }
     }
