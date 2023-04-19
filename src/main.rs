@@ -199,16 +199,16 @@ fn main() {
                                 Err(e) => println!("\x1b[33mThose are the wrong ingredients!\x1b[0m"),
                             }
                         }
-                    }
-                    else if option.eq("protocol"){
-                        match value{
-                            "udp" | "UDP" => {protocol = 1;  
-                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "UDP");},
-                            "tcp" | "TCP" => {protocol = 2;
-                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "TCP");},
-                            "http" | "HTTP" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
-                            "dns" | "DNS" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
-                            &_ => println!("\x1b[31mThose are the wrong ingredients!\x1b[0m"),
+                        else if option.eq("protocol"){
+                            match value{
+                                "udp" | "UDP" => {protocol = 1;  
+                                    println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "UDP");},
+                                "tcp" | "TCP" => {protocol = 2;
+                                    println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "TCP");},
+                                "http" | "HTTP" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                                "dns" | "DNS" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                                &_ => println!("\x1b[31mThose are the wrong ingredients!\x1b[0m"),
+                            }
                         }
                     }
                     else if curr.eq("payload"){
