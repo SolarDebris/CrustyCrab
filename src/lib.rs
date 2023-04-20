@@ -31,6 +31,9 @@ use std::thread;
 use std::path::Path;
 use std::str;
 use std::fs;
+use directories::UserDirs;
+use std::env::{self, current_dir};
+use std::str::SplitWhitespace;
 /*****************************/
 /*     USEFUL STRUCTURES     */
 /*****************************/
@@ -663,14 +666,97 @@ pub fn tcp_shell(stream: &mut TcpStream) {
 // executes a single arbitrary command
 pub fn execute_cmd(s: String) -> String {
     if s.trim().contains(' ') {
-        let mut split = s.trim().split_whitespace();
+        let mut split = splitwhite(&s);
         let head = split.next().unwrap();
+        let mut dir_split = split.clone();
+        let mut cp_split = split.clone();
         let mut tail: Vec<&str> = split.collect();
         tail.pop();
         match head {
-            /*"cd" => {
-                // TODO
-            },*/
+            "cd" => {
+                let cmp = dir_split.next();
+                if cmp.unwrap().len() >= 3{
+                    let mut split_cmd = dir_split;
+                    let user = UserDirs::new().unwrap();
+                    let dir = cmp.unwrap();
+                    if dir.contains("~") {
+                        let full_home_dir = dir.replace("~", user.home_dir().to_str().unwrap());
+                        if dir.eq("~") {
+                            if env::set_current_dir(user.home_dir()).is_err() {
+                                // Will set the directory to home if no errors are envoked.
+                                return "cd: permission denied".to_string();
+                            } 
+                            else{
+                                return format!("Directory changed");
+                            }
+                        }
+                        else if Path::new(&full_home_dir).exists() {
+                            if env::set_current_dir(full_home_dir).is_err() {
+                                let ret = 
+                                return "cd: permission denied".to_string();
+                            }
+                            else{
+                                return format!("Directory changed");
+                            } 
+                        }
+                        else {
+                            return "cd: no such file or directory".to_string();
+                        }
+
+                    }
+                    else if Path::new(&dir).exists() {
+                        if env::set_current_dir(&dir).is_err() {
+                            // Will set the directory if no errors are envoked.
+                            return "cd: permission denied".to_string();
+                        }
+                        else{
+                            return format!("Directory changed");
+                        }  
+                    }
+                    else {
+                        return "cd: no such file or directory".to_string();
+                    }
+                }
+                else {
+                    if cmp.unwrap().eq(".."){
+                        let parent = &env::current_dir().unwrap().parent().unwrap().to_str().unwrap().to_string();
+                        if env::set_current_dir(&parent).is_err(){
+                            return "cd: error".to_string();
+                        }
+                        else{
+                            return format!("Directory changed");
+                        }
+                    }
+                    else{
+                        let user = UserDirs::new().unwrap();
+                        if env::set_current_dir(user.home_dir()).is_err() {
+                            // Will set the directory to home if no errors are envoked.
+                            return "cd: permission denied".to_string();
+                        }
+                        else{
+                            return format!("Directory changed");
+                        }
+                    }
+                    
+                }
+            },
+            "cp" => {
+                let mut split_cmd: Vec<&str> = cp_split.collect();
+                split_cmd.pop();
+                if Command::new("cp").args(split_cmd).status().is_ok() {
+                    return format!("Copied");
+                }
+                else {
+                    return format!("Copy error");
+                }
+            },
+            "rm" => {
+                let cmd = Command::new(head).args(tail).output();
+                match cmd{
+                    Ok(c) => return format!("File(s) removed"),
+                    Err(e) => return format!("{}", e),
+                }
+            },
             head => {
                 let cmd = Command::new(head).args(tail).output();
                 match cmd{
@@ -908,6 +994,15 @@ pub fn get_system_addr() -> SocketAddr {
     return SocketAddr::from(([127, 0, 0, 1], 1337));
 }
 
+fn splitwhite(s: &str) -> SplitWhitespace<'_>{
+    let mut split = s.trim().strip_prefix('\0');
+    if split == None{
+        return s.trim().split_whitespace();
+    }
+    else{
+        return split.unwrap().split_whitespace();
+    }
+}
 
 // Functions for portal
 fn progress(transferred: usize) {
