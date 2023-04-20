@@ -94,8 +94,8 @@ fn main() {
                 // print the help menu
                 help();
             }
-            else if current_cmd.contains("|") || current_cmd.contains(">"){
-                let mut result = Command::new("sh").arg("-c").arg(current_cmd).status().unwrap();
+            else if current_cmd.contains("|") || current_cmd.contains(">") || current_cmd.contains("<"){
+                Command::new("sh").arg("-c").arg(current_cmd).status().unwrap();
             }
             else if current_cmd.starts_with("cd") {
                 if current_cmd.len() > 2 {
