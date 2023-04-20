@@ -81,9 +81,10 @@ fn main() {
         let mut cmds = usr_cmd.split(';');
 
         // loop through each command given
+        let user = UserDirs::new().unwrap();
         let mut head = cmds.next();
         while head != None {
-            let current_cmd = head.unwrap().trim();
+            let current_cmd = head.unwrap().trim().replace("~", user.home_dir().to_str().unwrap());
 
             if current_cmd.eq("exit") || current_cmd.eq("quit") || current_cmd.eq("q"){ 
                 // quit the program
@@ -97,31 +98,12 @@ fn main() {
                 let mut result = Command::new("sh").arg("-c").arg(current_cmd).status().unwrap();
             }
             else if current_cmd.starts_with("cd") {
-                if current_cmd.len() > 3{
+                if current_cmd.len() > 2 {
                     let mut split_cmd = current_cmd.split(" ");
                     split_cmd.next();
                     let user = UserDirs::new().unwrap();
                     let dir = split_cmd.next().unwrap();
-                    if dir.contains("~") {
-                        let full_home_dir = dir.replace("~", user.home_dir().to_str().unwrap());
-                        if dir.eq("~") {
-                            if env::set_current_dir(user.home_dir()).is_err() {
-                                // Will set the directory to home if no errors are envoked.
-                                println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
-                            } 
-                        }
-                        else if Path::new(&full_home_dir).exists() {
-                            if env::set_current_dir(full_home_dir).is_err() {
-                                // Will set the directory to home if no errors are envoked.
-                                println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
-                            } 
-                        }
-                        else {
-                            println!("cd: no such file or directory: {dir}");
-                        }
-
-                    }
-                    else if Path::new(&dir).exists() {
+                    if Path::new(&dir).exists() {
                         if env::set_current_dir(&dir).is_err() {
                             // Will set the directory if no errors are envoked.
                             println!("cd: permission denied: {dir}")
@@ -132,7 +114,6 @@ fn main() {
                     }
                 }
                 else {
-                    let user = UserDirs::new().unwrap();
                     if env::set_current_dir(user.home_dir()).is_err() {
                         // Will set the directory to home if no errors are envoked.
                         println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
