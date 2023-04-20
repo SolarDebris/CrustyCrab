@@ -63,7 +63,13 @@ fn main() {
         else {
             prompt = format!("\x1b[33mCrustyCrab ({}/) $ \x1b[0m", current_dir().unwrap().file_name().unwrap().to_str().unwrap());
         }
-        let mut usr_cmd = rust_inline.expect("failed to execute process").readline(prompt.as_str()).unwrap();
+        let mut input = rust_inline.expect("failed to execute process").readline(prompt.as_str());
+        if input.is_err() {
+            continue;
+        }
+        else {
+            usr_cmd = input.unwrap();
+        }
 
         // regex that removes multiple spaces
         let re = Regex::new(r"\s+").unwrap();
