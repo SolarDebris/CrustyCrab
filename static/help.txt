@@ -40,6 +40,7 @@ run -> run a module on the anchovy
 set anchovy ip -> sets the ip to connect to for the anchovy
 set anchovy os -> sets the anchovy os (linux/windows)
 shell -> setup a reverse shell on the anchovy 
+steal_formulas -> exfil files in .secret_formulas dir
 spawn -> compiles the implant executable 
 		ip, hostname, os, privelege, architecture
 
