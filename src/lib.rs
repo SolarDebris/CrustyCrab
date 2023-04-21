@@ -687,7 +687,7 @@ pub fn execute_cmd(s: String) -> String {
                                 return "cd: permission denied".to_string();
                             } 
                             else{
-                                return format!("Directory changed");
+                                return format!("Directory changed!");
                             }
                         }
                         else if Path::new(&full_home_dir).exists() {
@@ -696,7 +696,7 @@ pub fn execute_cmd(s: String) -> String {
                                 return "cd: permission denied".to_string();
                             }
                             else{
-                                return format!("Directory changed");
+                                return format!("Directory changed!");
                             } 
                         }
                         else {
@@ -710,7 +710,7 @@ pub fn execute_cmd(s: String) -> String {
                             return "cd: permission denied".to_string();
                         }
                         else{
-                            return format!("Directory changed");
+                            return format!("Directory changed!");
                         }  
                     }
                     else {
@@ -724,7 +724,7 @@ pub fn execute_cmd(s: String) -> String {
                             return "cd: error".to_string();
                         }
                         else{
-                            return format!("Directory changed");
+                            return format!("Directory changed!");
                         }
                     }
                     else{
@@ -734,7 +734,7 @@ pub fn execute_cmd(s: String) -> String {
                             return "cd: permission denied".to_string();
                         }
                         else{
-                            return format!("Directory changed");
+                            return format!("Directory changed!");
                         }
                     }
                     
@@ -744,7 +744,7 @@ pub fn execute_cmd(s: String) -> String {
                 let mut split_cmd: Vec<&str> = cp_split.collect();
                 split_cmd.pop();
                 if Command::new("cp").args(split_cmd).status().is_ok() {
-                    return format!("Copied");
+                    return format!("File(s) copied!");
                 }
                 else {
                     return format!("Copy error");
@@ -753,7 +753,21 @@ pub fn execute_cmd(s: String) -> String {
             "rm" => {
                 let cmd = Command::new(head).args(tail).output();
                 match cmd{
-                    Ok(c) => return format!("File(s) removed"),
+                    Ok(c) => return format!("File(s) removed!"),
+                    Err(e) => return format!("{}", e),
+                }
+            },
+            "mkdir" => {
+                let cmd = Command::new(head).args(tail).output();
+                match cmd{
+                    Ok(c) => return format!("Directory created!"),
+                    Err(e) => return format!("{}", e),
+                }
+            },
+            "mv" => {
+                let cmd = Command::new(head).args(tail).output();
+                match cmd{
+                    Ok(c) => return format!("File(s) moved!"),
                     Err(e) => return format!("{}", e),
                 }
             },
