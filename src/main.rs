@@ -48,6 +48,7 @@ fn main() {
     let mut listen_port: u16 = 2120;
     let mut local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
     let mut curr_module = String::new();
+    let start_dir = current_dir().unwrap().to_str().unwrap().to_string();
     // main program loop
     loop {
         // print the prompt and read in a command
@@ -92,7 +93,7 @@ fn main() {
             } 
             else if current_cmd.starts_with("help") { 
                 // print the help menu
-                help();
+                help(start_dir.clone());
             }
             else if current_cmd.contains("|") || current_cmd.contains(">") || current_cmd.contains("<"){
                 Command::new("sh").arg("-c").arg(current_cmd).status().unwrap();
@@ -298,9 +299,10 @@ fn banner(){
 
 
 // prints help optional second argument for more specific details
-fn help(){
-    let contents = fs::read_to_string("static/help.txt");
-    println!("\x1b[36m{c}\n\x1b[0m", c=contents.unwrap());
+fn help(init_work_dir:String){
+    println!("{}static/help.txt", init_work_dir);
+    let contents = fs::read_to_string(format!("{}/static/help.txt", init_work_dir));
+    println!("\x1b[36m{c}\n\x1b[0m", c=contents.unwrap().to_string());
 }
 
 
