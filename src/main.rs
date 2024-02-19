@@ -48,6 +48,7 @@ fn main() {
     let mut listen_port: u16 = 2120;
     let mut local_address = SocketAddr::from(([127, 0, 0, 1], listen_port));
     let mut curr_module = String::new();
+    let start_dir = current_dir().unwrap().to_str().unwrap().to_string();
     // main program loop
     loop {
         // print the prompt and read in a command
@@ -81,9 +82,10 @@ fn main() {
         let mut cmds = usr_cmd.split(';');
 
         // loop through each command given
+        let user = UserDirs::new().unwrap();
         let mut head = cmds.next();
         while head != None {
-            let current_cmd = head.unwrap().trim();
+            let current_cmd = head.unwrap().trim().replace("~", user.home_dir().to_str().unwrap());
 
             if current_cmd.eq("exit") || current_cmd.eq("quit") || current_cmd.eq("q"){ 
                 // quit the program
@@ -91,37 +93,18 @@ fn main() {
             } 
             else if current_cmd.starts_with("help") { 
                 // print the help menu
-                help();
+                help(start_dir.clone());
             }
-            else if current_cmd.contains("|") || current_cmd.contains(">"){
-                let mut result = Command::new("sh").arg("-c").arg(current_cmd).status().unwrap();
+            else if current_cmd.contains("|") || current_cmd.contains(">") || current_cmd.contains("<"){
+                Command::new("sh").arg("-c").arg(current_cmd).status().unwrap();
             }
             else if current_cmd.starts_with("cd") {
-                if current_cmd.len() > 3{
+                if current_cmd.len() > 2 {
                     let mut split_cmd = current_cmd.split(" ");
                     split_cmd.next();
                     let user = UserDirs::new().unwrap();
                     let dir = split_cmd.next().unwrap();
-                    if dir.contains("~") {
-                        let full_home_dir = dir.replace("~", user.home_dir().to_str().unwrap());
-                        if dir.eq("~") {
-                            if env::set_current_dir(user.home_dir()).is_err() {
-                                // Will set the directory to home if no errors are envoked.
-                                println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
-                            } 
-                        }
-                        else if Path::new(&full_home_dir).exists() {
-                            if env::set_current_dir(full_home_dir).is_err() {
-                                // Will set the directory to home if no errors are envoked.
-                                println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
-                            } 
-                        }
-                        else {
-                            println!("cd: no such file or directory: {dir}");
-                        }
-
-                    }
-                    else if Path::new(&dir).exists() {
+                    if Path::new(&dir).exists() {
                         if env::set_current_dir(&dir).is_err() {
                             // Will set the directory if no errors are envoked.
                             println!("cd: permission denied: {dir}")
@@ -132,7 +115,6 @@ fn main() {
                     }
                 }
                 else {
-                    let user = UserDirs::new().unwrap();
                     if env::set_current_dir(user.home_dir()).is_err() {
                         // Will set the directory to home if no errors are envoked.
                         println!("cd: permission denied: {}", user.home_dir().to_str().unwrap())
@@ -317,9 +299,10 @@ fn banner(){
 
 
 // prints help optional second argument for more specific details
-fn help(){
-    let contents = fs::read_to_string("static/help.txt");
-    println!("\x1b[36m{c}\n\x1b[0m", c=contents.unwrap());
+fn help(init_work_dir:String){
+    println!("{}static/help.txt", init_work_dir);
+    let contents = fs::read_to_string(format!("{}/static/help.txt", init_work_dir));
+    println!("\x1b[36m{c}\n\x1b[0m", c=contents.unwrap().to_string());
 }
 
 
